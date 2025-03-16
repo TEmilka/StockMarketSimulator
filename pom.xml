@@ -6,7 +6,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.4.3</version>
-        <relativePath/>
+        <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.example</groupId>
     <artifactId>StockMarketSimulator</artifactId>
@@ -40,14 +40,6 @@
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-thymeleaf</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.2</version>
@@ -55,15 +47,15 @@
     </dependencies>
 
     <build>
-        <sourceDirectory>src/main/java</sourceDirectory>
+        <sourceDirectory>backend/src/main/java</sourceDirectory>
 
         <resources>
             <resource>
-                <directory>src/main/resources</directory>
+                <directory>backend/src/main/resources</directory>
             </resource>
         </resources>
 
-        <directory>target</directory>
+        <directory>backend/target</directory>
 
         <plugins>
             <plugin>
@@ -82,6 +74,30 @@
                 <configuration>
                     <mainClass>org.example.stockmarketsimulator.StockMarketSimulatorApplication</mainClass>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/backend/src/main/resources/static</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/ui-app/dist</directory>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
