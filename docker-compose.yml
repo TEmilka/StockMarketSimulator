@@ -1,32 +1,28 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  # Backend Spring Boot
   backend:
     build: ./backend
     ports:
-      - "8080:8080"
+      - "8000:8000"
+    volumes:
+      - frontend-static:/app/src/main/resources/static
     depends_on:
       - postgres
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mydatabase
-      SPRING_DATASOURCE_USERNAME: myuser
-      SPRING_DATASOURCE_PASSWORD: mypassword
+      - ui-app
 
-
-  # Frontend React
-  frontend:
-    build: ./frontend
+  ui-app:
+    build: ./ui-app
     ports:
-      - "3000:3000"
-    depends_on:
-      - backend
+      - "8080:80"
+    environment:
+      - REACT_APP_BACKEND_URL=http://backend:8000
+    volumes:
+      - frontend-static:/usr/share/nginx/html
 
-  # PostgreSQL
   postgres:
     image: postgres:13
     environment:
-      POSTGRES_HOST: postgres
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
       POSTGRES_DB: mydatabase
@@ -35,13 +31,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # pgAdmin - narzędzie do zarządzania PostgreSQL
+
   pgadmin:
     image: dpage/pgadmin4
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-      TZ: Europe/Warsaw
+      PGADMIN_DEFAULT_PASSWORD: newpassword
     ports:
       - "5050:80"
     depends_on:
@@ -52,3 +47,6 @@ services:
 volumes:
   postgres_data:
   pgadmin_data:
+  frontend-static:
+    external: false
+

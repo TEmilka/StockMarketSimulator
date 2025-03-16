@@ -5,16 +5,15 @@ FROM node:18-alpine as build
 WORKDIR /app
 COPY package.json package-lock.json ./
 
-# Install dependencies and build the project
 RUN npm install
 COPY . .
 RUN npm run build
 
-# Serve the app with Nginx
 FROM nginx:alpine
 
-# Copy the built files from the previous stage
-COPY . .
+COPY --from=build /app/dist /usr/share/nginx/html
+
+COPY config/default.conf /etc/nginx/conf.d/
 
 # Expose port 80
 EXPOSE 80
