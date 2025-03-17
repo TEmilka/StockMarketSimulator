@@ -1,8 +1,6 @@
 package org.example.stockmarketsimulator.model;
 
 import jakarta.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "app_user")
@@ -14,13 +12,8 @@ public class User {
     private String name;
     private String email;
 
-    @ManyToMany
-    @JoinTable(
-            name = "user_assets",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "asset_id")
-    )
-    private Set<Asset> assets = new HashSet<>();
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private UserWallet wallet;
 
     public User() {}
 
@@ -29,7 +22,6 @@ public class User {
         this.email = email;
     }
 
-    // Gettery i settery
 
     public Long getId() {
         return id;
@@ -55,15 +47,18 @@ public class User {
         this.email = email;
     }
 
-    public Set<Asset> getAssets() {
-        return assets;
+    public UserWallet getWallet() {
+        return wallet;
     }
 
-    public void setAssets(Set<Asset> assets) {
-        this.assets = assets;
+    public void setWallet(UserWallet wallet) {
+        this.wallet = wallet;
     }
 
-    public void addAsset(Asset asset) {
-        this.assets.add(asset);
+    public void addAssetToWallet(Asset asset, double quantity) {
+        if (this.wallet == null) {
+            this.wallet = new UserWallet(this);
+        }
+        this.wallet.addAsset(asset, quantity);
     }
 }

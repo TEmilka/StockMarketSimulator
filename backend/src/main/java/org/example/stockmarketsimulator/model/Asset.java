@@ -16,9 +16,6 @@ public class Asset {
     private String name;
     private double price;
 
-    @ManyToMany(mappedBy = "assets")
-    @JsonIgnore
-    private Set<User> users;
 
     public Asset() {}
 
@@ -27,7 +24,6 @@ public class Asset {
         this.price = price;
         this.name = name;
     }
-
 
     public Long getId() {
         return id;

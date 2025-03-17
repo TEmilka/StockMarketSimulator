@@ -1,7 +1,6 @@
 package org.example.stockmarketsimulator.controller;
 
 import org.example.stockmarketsimulator.model.Asset;
-import org.example.stockmarketsimulator.model.User;
 import org.example.stockmarketsimulator.repository.AssetsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,7 +18,7 @@ public class AssetsConstroller {
     private AssetsRepository assetsRepository;
 
     @GetMapping
-    public List<Asset> getUsers() {
+    public List<Asset> getAssets() {
         return assetsRepository.findAll();
     }
 
@@ -34,9 +33,9 @@ public class AssetsConstroller {
         Optional<Asset> asset = assetsRepository.findById(id);
         if (asset.isPresent()) {
             assetsRepository.deleteById(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
