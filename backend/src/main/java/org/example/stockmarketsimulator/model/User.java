@@ -20,8 +20,8 @@ public class User {
     public User(String name, String email) {
         this.name = name;
         this.email = email;
+        this.wallet = new UserWallet();
     }
-
 
     public Long getId() {
         return id;
@@ -55,10 +55,4 @@ public class User {
         this.wallet = wallet;
     }
 
-    public void addAssetToWallet(Asset asset, double quantity) {
-        if (this.wallet == null) {
-            this.wallet = new UserWallet(this);
-        }
-        this.wallet.addAsset(asset, quantity);
-    }
 }

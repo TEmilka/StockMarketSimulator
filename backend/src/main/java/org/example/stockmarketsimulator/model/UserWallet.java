@@ -1,8 +1,7 @@
 package org.example.stockmarketsimulator.model;
 
 import jakarta.persistence.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Set;
 
 @Entity
 @Table(name = "user_wallet")
@@ -16,10 +15,9 @@ public class UserWallet {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @MapKeyJoinColumn(name = "asset_id")
-    @Column(name = "quantity")
-    private Map<Asset, Double> userAssets = new HashMap<>();
+
+    @OneToMany(mappedBy = "wallet", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<WalletAssets> walletAssets;
 
     public UserWallet() {}
 
@@ -43,15 +41,4 @@ public class UserWallet {
         this.user = user;
     }
 
-    public Map<Asset, Double> getUserAssets() {
-        return userAssets;
-    }
-
-    public void setUserAssets(Map<Asset, Double> userAssets) {
-        this.userAssets = userAssets;
-    }
-
-    public void addAsset(Asset asset, double quantity) {
-        this.userAssets.put(asset, this.userAssets.getOrDefault(asset, 0.0) + quantity);
-    }
 }
