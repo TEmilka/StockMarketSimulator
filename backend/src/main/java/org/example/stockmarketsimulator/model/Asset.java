@@ -2,9 +2,6 @@ package org.example.stockmarketsimulator.model;
 
 import jakarta.persistence.*;
 
-import java.util.Set;
-
-
 @Entity
 @Table(name = "assets")
 public class Asset {
@@ -15,9 +12,6 @@ public class Asset {
     private String symbol;
     private String name;
     private double price;
-
-    @OneToMany(mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<WalletAssets> walletAssets;
 
     public Asset() {}
 

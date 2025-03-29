@@ -20,7 +20,6 @@ public class User {
     public User(String name, String email) {
         this.name = name;
         this.email = email;
-        this.wallet = new UserWallet();
     }
 
     public Long getId() {
@@ -54,5 +53,4 @@ public class User {
     public void setWallet(UserWallet wallet) {
         this.wallet = wallet;
     }
-
 }
