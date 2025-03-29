@@ -18,9 +18,9 @@ public class UserWallet {
 
     @ElementCollection
     @CollectionTable(name = "wallet_assets", joinColumns = @JoinColumn(name = "wallet_id"))
-    @MapKeyJoinColumn(name = "asset_id")
+    @MapKeyColumn(name = "asset_id")
     @Column(name = "amount")
-    private Map<Asset, Double> assets = new HashMap<>();
+    private Map<Long, Double> assets = new HashMap<>();
 
     public UserWallet() {}
 
@@ -44,15 +44,15 @@ public class UserWallet {
         this.user = user;
     }
 
-    public Map<Asset, Double> getAssets() {
+    public Map<Long, Double> getAssets() {
         return assets;
     }
 
-    public void addAsset(Asset asset, double amount) {
+    public void addAsset(Long asset, double amount) {
         assets.merge(asset, amount, Double::sum);
     }
 
-    public void removeAsset(Asset asset, double amount) {
+    public void removeAsset(Long asset, double amount) {
         assets.computeIfPresent(asset, (k, v) -> (v - amount) > 0 ? v - amount : null);
     }
 }

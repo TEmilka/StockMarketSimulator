@@ -1,0 +1,59 @@
+/* AddUser.css */
+.container {
+    padding: 1rem;
+    max-width: 28rem;
+    margin: 0 auto;
+}
+
+.title {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.form {
+    margin-top: 1rem;
+}
+
+.input {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    width: 100%;
+}
+
+.input-email {
+    margin-top: 0.5rem;
+}
+
+.button {
+    background-color: #3b82f6;
+    color: white;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    width: 100%;
+    cursor: pointer;
+}
+
+.button:disabled {
+    background-color: #a3a3a3;
+    cursor: not-allowed;
+}
+
+.error {
+    color: #f87171;
+    margin-top: 0.5rem;
+}
+
+.user-list {
+    margin-top: 1.5rem;
+}
+
+.user-list-title {
+    font-size: 1.125rem;
+    font-weight: bold;
+}
+
+.user-item {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+}
