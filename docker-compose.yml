@@ -1,24 +1,6 @@
 version: '3.8'
 
 services:
-#  backend:
-#    build: ./backend
-#    ports:
-#      - "8000:8000"
-#    volumes:
-#      - frontend-static:/app/src/main/resources/static
-#    depends_on:
-#      - postgres
-#      - ui-app
-#
-#  ui-app:
-#    build: ./ui-app
-#    ports:
-#      - "8080:80"
-#    environment:
-#      - REACT_APP_BACKEND_URL=http://backend:8000
-#    volumes:
-#      - frontend-static:/usr/share/nginx/html
 
   postgres:
     image: postgres:13

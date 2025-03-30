@@ -1,7 +1,6 @@
-// pages/AddAsset.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import './AddAsset.css';
+import './Assets.css';
 
 interface AssetForm {
     symbol: string;
@@ -9,12 +8,37 @@ interface AssetForm {
     price: number;
 }
 
-function AddAsset() {
+interface Asset {
+    id: number;
+    symbol: string;
+    name: string;
+    price: number;
+}
+
+function Assets() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [assets, setAssets] = useState<Asset[]>([]);
     const { register, handleSubmit, reset } = useForm<AssetForm>();
 
-    const addAsset = async (data: AssetForm) => {
+    const fetchAssets = async () => {
+        try {
+            const response = await fetch("http://localhost:8000/api/assets");
+            if (!response.ok) {
+                throw new Error("Nie udało się pobrać assetów");
+            }
+            const data = await response.json();
+            setAssets(data);
+        } catch (err) {
+            setError((err as Error).message);
+        }
+    };
+
+    useEffect(() => {
+        fetchAssets();
+    }, []);
+
+    const addAssetToApi = async (data: AssetForm) => {
         setLoading(true);
         setError("");
         try {
@@ -33,6 +57,7 @@ function AddAsset() {
             }
 
             reset();
+            fetchAssets();
         } catch (err) {
             setError((err as Error).message);
         } finally {
@@ -40,11 +65,27 @@ function AddAsset() {
         }
     };
 
+    const deleteAsset = async (id: number) => {
+        try {
+            const response = await fetch(`http://localhost:8000/api/assets/${id}`, {
+                method: "DELETE",
+            });
+
+            if (response.ok) {
+                setAssets(assets.filter(asset => asset.id !== id));
+            } else {
+                setError("Nie udało się usunąć assetu");
+            }
+        } catch (err) {
+            setError((err as Error).message);
+        }
+    };
+
     return (
         <div className="container">
             <h1 className="title">Dodaj Asset</h1>
 
-            <form onSubmit={handleSubmit(addAsset)} className="form">
+            <form onSubmit={handleSubmit(addAssetToApi)} className="form">
                 <input
                     {...register("symbol", { required: true })}
                     placeholder="Symbol"
@@ -71,8 +112,24 @@ function AddAsset() {
             </form>
 
             {error && <p className="error">{error}</p>}
+
+            <div className="asset-list">
+                <h2 className="asset-list-title">Lista assetów</h2>
+                {assets.length > 0 ? (
+                    <ul>
+                        {assets.map((asset: Asset, idx: number) => (
+                            <li key={idx} className="asset-item">
+                                {asset.name} ({asset.symbol}) - {asset.price} USD
+                                <button onClick={() => deleteAsset(asset.id)}>Usuń</button>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p>Brak assetów</p>
+                )}
+            </div>
         </div>
     );
 }
 
-export default AddAsset;
+export default Assets;

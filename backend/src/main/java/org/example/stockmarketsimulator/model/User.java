@@ -1,6 +1,7 @@
 package org.example.stockmarketsimulator.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "app_user")
@@ -12,7 +13,8 @@ public class User {
     private String name;
     private String email;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private UserWallet wallet;
 
     public User() {}
@@ -20,6 +22,7 @@ public class User {
     public User(String name, String email) {
         this.name = name;
         this.email = email;
+        this.wallet = new UserWallet(this);
     }
 
     public Long getId() {
@@ -54,3 +57,4 @@ public class User {
         this.wallet = wallet;
     }
 }
+

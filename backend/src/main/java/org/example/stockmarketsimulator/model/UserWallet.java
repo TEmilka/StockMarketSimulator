@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name = "user_wallet")
 public class UserWallet {
@@ -14,6 +16,7 @@ public class UserWallet {
 
     @OneToOne
     @JoinColumn(name = "user_id")
+    @JsonBackReference
     private User user;
 
     @ElementCollection
@@ -56,3 +59,4 @@ public class UserWallet {
         assets.computeIfPresent(asset, (k, v) -> (v - amount) > 0 ? v - amount : null);
     }
 }
+

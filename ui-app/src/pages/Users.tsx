@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useStore } from "../store";
-import './AddUser.css';
+import { useNavigate } from "react-router-dom";
+import './Users.css';
 
 interface User {
     id?: number;
@@ -14,13 +15,31 @@ interface UserForm {
     email: string;
 }
 
-function AddUser() {
-    const { users, setUsers } = useStore();
+function Users() {
+    const { users, setUsers, addUser } = useStore();
     const { register, handleSubmit, reset } = useForm<UserForm>();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const navigate = useNavigate();
 
-    const addUser = async (data: UserForm) => {
+    const fetchUsers = async () => {
+        try {
+            const response = await fetch("http://localhost:8000/api/users");
+            if (!response.ok) {
+                throw new Error("Nie udało się pobrać użytkowników");
+            }
+            const data = await response.json();
+            setUsers(data);
+        } catch (err) {
+            setError((err as Error).message);
+        }
+    };
+
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
+    const addUserToApi = async (data: UserForm) => {
         setLoading(true);
         setError("");
         try {
@@ -41,7 +60,7 @@ function AddUser() {
             }
 
             const newUser: User = await response.json();
-            setUsers([...users, newUser]);
+            addUser(newUser);
             reset();
         } catch (err) {
             setError((err as Error).message);
@@ -50,11 +69,31 @@ function AddUser() {
         }
     };
 
+    const deleteUser = async (id: number) => {
+        try {
+            const response = await fetch(`http://localhost:8000/api/users/${id}`, {
+                method: "DELETE",
+            });
+
+            if (response.ok) {
+                setUsers(users.filter(user => user.id !== id));
+            } else {
+                setError("Nie udało się usunąć użytkownika");
+            }
+        } catch (err) {
+            setError((err as Error).message);
+        }
+    };
+
+    const viewUserWallet = (userId: number) => {
+        navigate(`/user-wallet/${userId}`);
+    };
+
     return (
         <div className="container">
             <h1 className="title">Stock Market Simulator</h1>
 
-            <form onSubmit={handleSubmit(addUser)} className="form">
+            <form onSubmit={handleSubmit(addUserToApi)} className="form">
                 <input
                     {...register("name", { required: true })}
                     placeholder="Imię"
@@ -84,6 +123,8 @@ function AddUser() {
                         {users.map((user: User, idx: number) => (
                             <li key={idx} className="user-item">
                                 {user.name} - {user.email}
+                                <button onClick={() => deleteUser(user.id!)}>Usuń</button>
+                                <button onClick={() => viewUserWallet(user.id!)}>Zobacz portfel</button>
                             </li>
                         ))}
                     </ul>
@@ -95,4 +136,4 @@ function AddUser() {
     );
 }
 
-export default AddUser;
+export default Users;
