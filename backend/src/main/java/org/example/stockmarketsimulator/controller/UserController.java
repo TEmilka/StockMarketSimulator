@@ -54,7 +54,6 @@ public class UserController {
         }
     }
 
-    // Pobranie szczegółowych informacji o portfelu użytkownika
     @GetMapping("/{userId}/wallet/details")
     public ResponseEntity<?> getUserWalletDetails(@PathVariable Long userId) {
         try {
@@ -113,7 +112,6 @@ public class UserController {
                 wallet.addAsset(assetId, amount);
                 userRepository.save(user);
 
-                // Zwracamy ZAKTUALIZOWANY stan portfela
                 List<Map<String, Object>> updatedAssets = new ArrayList<>();
                 for (Map.Entry<Long, Double> entry : wallet.getAssets().entrySet()) {
                     Optional<Asset> asset = assetsRepository.findById(entry.getKey());

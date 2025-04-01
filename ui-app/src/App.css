@@ -1,29 +1,44 @@
-/* App.css */
+html, body {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
   padding: 1rem;
-  max-width: 28rem;
-  margin: 0 auto;
+  text-align: center;
 }
 
 .title {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: bold;
+  margin-bottom: 1rem;
 }
 
 .button-container {
   display: flex;
-  gap: 1rem;  /* Dodaje odstęp między przyciskami */
+  gap: 1rem;
   margin-top: 1rem;
 }
 
 .button {
-  background-color: #10b981;  /* Zielony kolor */
+  background-color: #10b981;
   color: white;
   padding: 0.5rem;
-  width: 48%;  /* Ustawiamy szerokość przycisków na 48% */
+  width: 8rem;
   cursor: pointer;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
 }
 
 .button:hover {
-  background-color: #059669;  /* Ciemniejszy odcień zieleni na hover */
+  background-color: #059669;
 }

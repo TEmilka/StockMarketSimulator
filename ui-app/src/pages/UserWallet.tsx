@@ -6,7 +6,7 @@ interface Asset {
     symbol: string;
     name: string;
     price: number;
-    amount: number; // Ilość posiadana w portfelu
+    amount: number;
 }
 
 function UserWallet() {
@@ -18,7 +18,6 @@ function UserWallet() {
     const [newAssetId, setNewAssetId] = useState<string>("");
     const [newAssetAmount, setNewAssetAmount] = useState<string>("");
 
-    // Funkcja do pobrania portfela użytkownika
     const fetchWalletDetails = async () => {
         try {
             setLoading(true);
@@ -36,7 +35,6 @@ function UserWallet() {
         }
     };
 
-    // Pobieramy portfel przy pierwszym renderze
     useEffect(() => {
         fetchWalletDetails();
     }, [userId]);
@@ -53,8 +51,8 @@ function UserWallet() {
                 throw new Error("Nie udało się dodać aktywa");
             }
 
-            const updatedWallet = await response.json(); // Otrzymujemy nową listę aktywów
-            setAssets(updatedWallet); // Ustawiamy nowy stan bez odświeżania
+            const updatedWallet = await response.json();
+            setAssets(updatedWallet);
 
             setNewAssetId("");
             setNewAssetAmount("");
@@ -83,7 +81,6 @@ function UserWallet() {
                 <p>Brak aktywów w portfelu.</p>
             )}
 
-            {/* Formularz dodawania aktywów */}
             <h2>Dodaj aktywo</h2>
             <form
                 onSubmit={(e) => {

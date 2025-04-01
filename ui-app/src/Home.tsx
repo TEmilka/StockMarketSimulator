@@ -9,12 +9,12 @@ function Home() {
             <div className="button-container">
                 <Link to="/add-user">
                     <button className="button">
-                        Users
+                        Użytkownicy
                     </button>
                 </Link>
                 <Link to="/add-asset">
                     <button className="button">
-                        Assets
+                        Aktywa
                     </button>
                 </Link>
             </div>
