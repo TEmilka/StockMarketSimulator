@@ -1,5 +1,10 @@
 package org.example.stockmarketsimulator.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.example.stockmarketsimulator.model.Asset;
 import org.example.stockmarketsimulator.model.User;
 import org.example.stockmarketsimulator.model.UserWallet;
@@ -24,11 +29,22 @@ public class UserController {
     @Autowired
     private AssetsRepository assetsRepository;
 
+    @Operation(summary = "Get all users", description = "Retrieve a list of all users.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of users retrieved successfully"),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
     @GetMapping
     public List<User> getUsers() {
         return userRepository.findAll();
     }
 
+    @Operation(summary = "Add a new user", description = "Create a new user with a wallet.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "User created successfully", content = @Content(schema = @Schema(implementation = User.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request, missing name or email", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
     @PostMapping
     public ResponseEntity<?> addUser(@RequestBody User user) {
         if (user.getName() == null || user.getEmail() == null) {
@@ -41,6 +57,12 @@ public class UserController {
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
 
+    @Operation(summary = "Delete a user", description = "Delete an existing user by ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "User deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         try {
@@ -56,6 +78,12 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "Get user wallet details", description = "Retrieve the details of a user's wallet including assets and their amounts.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Wallet details retrieved successfully", content = @Content(schema = @Schema(implementation = UserWallet.class))),
+            @ApiResponse(responseCode = "404", description = "User or wallet not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
     @GetMapping("/{userId}/wallet/details")
     public ResponseEntity<?> getUserWalletDetails(@PathVariable Long userId) {
         try {
@@ -100,6 +128,12 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "Add asset to user wallet", description = "Add a specific amount of an asset to a user's wallet.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Asset added to wallet successfully", content = @Content),
+            @ApiResponse(responseCode = "404", description = "User or asset not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
     @PostMapping("/{userId}/wallet/add")
     public ResponseEntity<?> addAssetToWallet(@PathVariable Long userId, @RequestBody Map<String, Object> payload) {
         try {
@@ -143,7 +177,4 @@ public class UserController {
                     .body("Błąd serwera: " + e.getMessage());
         }
     }
-
-
-
 }
