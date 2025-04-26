@@ -20,6 +20,12 @@ public class Asset {
         this.price = price;
         this.name = name;
     }
+    public Asset(Long id,String symbol, double price, String name) {
+        this.id = id;
+        this.symbol = symbol;
+        this.price = price;
+        this.name = name;
+    }
 
     public Long getId() {
         return id;
