@@ -47,46 +47,47 @@ public class UserControllerTests {
     @Test
     void getUsers_shouldReturnUsers() throws Exception {
         // Given
-        User user = new User("John Doe", "john.doe@example.com");
+        User user = new User("John Doe", "john.doe@example.com", "password123"); // Zaktualizowano
         when(userRepository.findAll()).thenReturn(Collections.singletonList(user));
 
         // When & Then
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("John Doe"))
+                .andExpect(jsonPath("$[0].username").value("John Doe"))
                 .andExpect(jsonPath("$[0].email").value("john.doe@example.com"));
     }
 
     @Test
     void addUser_shouldReturnCreatedUser() throws Exception {
         // Given
-        User user = new User("John Doe", "john.doe@example.com");
+        User user = new User("John Doe", "john.doe@example.com", "password123"); // Zaktualizowano
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         // When & Then
         mockMvc.perform(post("/api/users")
                         .contentType("application/json")
-                        .content("{\"name\":\"John Doe\",\"email\":\"john.doe@example.com\"}"))
+                        .content("{\"username\":\"John Doe\",\"email\":\"john.doe@example.com\",\"password\":\"password123\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("John Doe"))
+                .andExpect(jsonPath("$.username").value("John Doe"))
                 .andExpect(jsonPath("$.email").value("john.doe@example.com"));
+
     }
 
     @Test
-    void addUser_shouldReturnBadRequest_whenNameOrEmailIsMissing() throws Exception {
+    void addUser_shouldReturnBadRequest_whenNameOrEmailOrPasswordIsMissing() throws Exception {
         // When & Then
         mockMvc.perform(post("/api/users")
                         .contentType("application/json")
                         .content("{\"name\":\"John Doe\"}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Imię i email są wymagane"))
+                .andExpect(jsonPath("$.error").value("Imię, email i hasło są wymagane"))  // Zaktualizowany komunikat
                 .andExpect(jsonPath("$.status").value(400));
 
         mockMvc.perform(post("/api/users")
                         .contentType("application/json")
-                        .content("{\"email\":\"john.doe@example.com\"}"))
+                        .content("{\"email\":\"john.doe@example.com\",\"password\":\"password123\"}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Imię i email są wymagane"))
+                .andExpect(jsonPath("$.error").value("Imię, email i hasło są wymagane"))  // Zaktualizowany komunikat
                 .andExpect(jsonPath("$.status").value(400));
     }
 
@@ -94,7 +95,7 @@ public class UserControllerTests {
     void deleteUser_shouldReturnNoContent_whenUserExists() throws Exception {
         // Given
         Long userId = 1L;
-        User user = new User("John Doe", "john.doe@example.com");
+        User user = new User("John Doe", "john.doe@example.com", "password123"); // Zaktualizowano
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // When & Then
@@ -121,7 +122,7 @@ public class UserControllerTests {
     void getUserWalletDetails_shouldReturnWalletDetails() throws Exception {
         // Given
         Long userId = 1L;
-        User user = new User("John Doe", "john.doe@example.com");
+        User user = new User("John Doe", "john.doe@example.com", "password123"); // Zaktualizowano
         UserWallet wallet = new UserWallet(user);
         wallet.addAsset(1L, 10.0);
         user.setWallet(wallet);
@@ -159,7 +160,7 @@ public class UserControllerTests {
         Long assetId = 1L;
         Double amount = 10.0;
 
-        User user = new User("John Doe", "john.doe@example.com");
+        User user = new User("John Doe", "john.doe@example.com", "password123"); // Zaktualizowano
         Asset asset = new Asset("AAPL", 150.0, "Apple Inc.");
         UserWallet wallet = new UserWallet(user);
         user.setWallet(wallet);

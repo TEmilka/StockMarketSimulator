@@ -18,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -31,6 +33,9 @@ public class UserController {
 
     @Autowired
     private AssetsRepository assetsRepository;
+
+    private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
 
     @Operation(summary = "Get all users", description = "Retrieve a list of all users.")
     @ApiResponses(value = {
@@ -51,9 +56,14 @@ public class UserController {
     })
     @PostMapping
     public ResponseEntity<?> addUser(@RequestBody User user) {
-        if (user.getName() == null || user.getEmail() == null) {
-            throw new BadRequestException("Imię i email są wymagane");
+        if (user.getUsername() == null || user.getEmail() == null || user.getPassword() == null) {
+            throw new BadRequestException("Imię, email i hasło są wymagane");
         }
+
+        // Szyfrowanie hasła
+        String encryptedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encryptedPassword);
+
         user.setWallet(new UserWallet(user));
         User savedUser = userRepository.save(user);
 
