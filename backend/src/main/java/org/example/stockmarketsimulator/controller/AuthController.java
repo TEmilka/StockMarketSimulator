@@ -1,12 +1,20 @@
 package org.example.stockmarketsimulator.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
+import org.example.stockmarketsimulator.dto.UserRegistrationDTO;
 import org.example.stockmarketsimulator.model.User;
+import org.example.stockmarketsimulator.model.UserWallet;
+import org.example.stockmarketsimulator.repository.UserRepository;
 import org.example.stockmarketsimulator.security.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -21,6 +29,12 @@ public class AuthController {
 
     @Autowired
     private JwtUtils jwtUtils;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody User request) {
@@ -37,5 +51,30 @@ public class AuthController {
         } catch (AuthenticationException e) {
             throw new RuntimeException("Invalid credentials");
         }
+    }
+    @Operation(summary = "Rejestracja nowego użytkownika", description = "Tworzy nowego użytkownika z hasłem i zapisuje w bazie danych.")
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@RequestBody @Valid UserRegistrationDTO userDTO) {
+        if (userRepository.existsByEmail(userDTO.getEmail())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Użytkownik o tym emailu już istnieje.");
+        }
+
+        if (userRepository.existsByUsername(userDTO.getUsername())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Użytkownik o tej nazwie użytkownika już istnieje.");
+        }
+
+        String encryptedPassword = passwordEncoder.encode(userDTO.getPassword());
+
+        User newUser = new User();
+        newUser.setUsername(userDTO.getUsername());
+        newUser.setEmail(userDTO.getEmail());
+        newUser.setPassword(encryptedPassword);
+        newUser.setWallet(new UserWallet(newUser));
+
+        userRepository.save(newUser);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body("Użytkownik został pomyślnie zarejestrowany.");
     }
 }
