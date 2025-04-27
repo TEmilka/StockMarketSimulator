@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.example.stockmarketsimulator.exception.BadRequestException;
+import org.example.stockmarketsimulator.exception.ResourceNotFoundException;
 import org.example.stockmarketsimulator.model.Asset;
 import org.example.stockmarketsimulator.repository.AssetsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,9 +42,14 @@ public class AssetsController {
     })
     @PostMapping
     public ResponseEntity<Asset> addAsset(@RequestBody Asset asset) {
+        if (asset.getName() == null || asset.getSymbol() == null) {
+            throw new BadRequestException("Name and symbol are required for the asset.");
+        }
+
         Asset savedAsset = assetsRepository.save(asset);
         return new ResponseEntity<>(savedAsset, HttpStatus.CREATED);
     }
+
 
     @Operation(summary = "Delete an asset", description = "Delete an asset by ID.")
     @ApiResponses(value = {
@@ -52,13 +59,13 @@ public class AssetsController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAsset(@PathVariable Long id) {
-        Optional<Asset> asset = assetsRepository.findById(id);
-        if (asset.isPresent()) {
-            assetsRepository.deleteById(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        Optional<Asset> assetOpt = assetsRepository.findById(id);
+        if (assetOpt.isEmpty()) {
+            throw new ResourceNotFoundException("Aktywo o ID " + id + " nie zostało znalezione");
         }
+
+        assetsRepository.deleteById(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
 }

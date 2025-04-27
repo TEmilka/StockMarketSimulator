@@ -4,6 +4,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
+import org.example.stockmarketsimulator.exception.GlobalExceptionHandler;
 import org.example.stockmarketsimulator.model.Asset;
 import org.example.stockmarketsimulator.model.User;
 import org.example.stockmarketsimulator.model.UserWallet;
@@ -37,7 +38,10 @@ public class UserControllerTests {
 
     @BeforeEach
     public void setup() {
-        mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(userController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
     }
 
     @Test
@@ -75,13 +79,15 @@ public class UserControllerTests {
                         .contentType("application/json")
                         .content("{\"name\":\"John Doe\"}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Imię i email są wymagane"));
+                .andExpect(jsonPath("$.error").value("Imię i email są wymagane"))
+                .andExpect(jsonPath("$.status").value(400));
 
         mockMvc.perform(post("/api/users")
                         .contentType("application/json")
                         .content("{\"email\":\"john.doe@example.com\"}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Imię i email są wymagane"));
+                .andExpect(jsonPath("$.error").value("Imię i email są wymagane"))
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test
@@ -117,7 +123,7 @@ public class UserControllerTests {
         Long userId = 1L;
         User user = new User("John Doe", "john.doe@example.com");
         UserWallet wallet = new UserWallet(user);
-        wallet.addAsset(1L, 10.0);  // Add asset to wallet
+        wallet.addAsset(1L, 10.0);
         user.setWallet(wallet);
 
         Asset asset = new Asset("AAPL", 150.0, "Apple Inc.");
@@ -142,7 +148,8 @@ public class UserControllerTests {
         // When & Then
         mockMvc.perform(get("/api/users/{userId}/wallet/details", userId))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Użytkownik nie znaleziony"));
+                .andExpect(jsonPath("$.error").value("Użytkownik nie znaleziony"))
+                .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test
@@ -175,19 +182,14 @@ public class UserControllerTests {
     void addAssetToWallet_shouldReturnNotFound_whenAssetOrUserDoesNotExist() throws Exception {
         // Given
         Long userId = 1L;
-        Long assetId = 1L;
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("assetId", assetId);
-        payload.put("amount", 10.0);
-
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
-        when(assetsRepository.findById(assetId)).thenReturn(Optional.empty());
 
         // When & Then
         mockMvc.perform(post("/api/users/{userId}/wallet/add", userId)
                         .contentType("application/json")
                         .content("{\"assetId\":1,\"amount\":10.0}"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Nie znaleziono użytkownika lub aktywa"));
+                .andExpect(jsonPath("$.error").value("Użytkownik o ID 1 nie został znaleziony"))
+                .andExpect(jsonPath("$.status").value(404));
     }
 }

@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.example.stockmarketsimulator.exception.BadRequestException;
+import org.example.stockmarketsimulator.exception.ResourceNotFoundException;
 import org.example.stockmarketsimulator.model.Asset;
 import org.example.stockmarketsimulator.model.User;
 import org.example.stockmarketsimulator.model.UserWallet;
@@ -48,8 +50,7 @@ public class UserController {
     @PostMapping
     public ResponseEntity<?> addUser(@RequestBody User user) {
         if (user.getName() == null || user.getEmail() == null) {
-            return ResponseEntity.badRequest().header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .body("Imię i email są wymagane");
+            throw new BadRequestException("Imię i email są wymagane");
         }
         user.setWallet(new UserWallet(user));
         User savedUser = userRepository.save(user);
@@ -65,17 +66,11 @@ public class UserController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        try {
-            Optional<User> user = userRepository.findById(id);
-            if (user.isPresent()) {
-                userRepository.deleteById(id);
-                return ResponseEntity.noContent().build();
-            } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Użytkownik o ID " + id + " nie został znaleziony"));
+
+        userRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Get user wallet details", description = "Retrieve the details of a user's wallet including assets and their amounts.")
@@ -86,46 +81,28 @@ public class UserController {
     })
     @GetMapping("/{userId}/wallet/details")
     public ResponseEntity<?> getUserWalletDetails(@PathVariable Long userId) {
-        try {
-            Optional<User> userOpt = userRepository.findById(userId);
-            if (userOpt.isPresent()) {
-                UserWallet wallet = userOpt.get().getWallet();
-                if (wallet == null) {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                            .body("Portfel nie istnieje");
-                }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Użytkownik nie znaleziony"));
 
-                Map<Long, Double> assetsMap = wallet.getAssets();
-                List<Map<String, Object>> detailedAssets = new ArrayList<>();
-
-                for (Map.Entry<Long, Double> entry : assetsMap.entrySet()) {
-                    Long assetId = entry.getKey();
-                    Double amount = entry.getValue();
-
-                    Optional<Asset> assetOpt = assetsRepository.findById(assetId);
-                    if (assetOpt.isPresent()) {
-                        Asset asset = assetOpt.get();
-                        Map<String, Object> assetDetails = new HashMap<>();
-                        assetDetails.put("id", asset.getId());
-                        assetDetails.put("symbol", asset.getSymbol());
-                        assetDetails.put("name", asset.getName());
-                        assetDetails.put("price", asset.getPrice());
-                        assetDetails.put("amount", amount);
-
-                        detailedAssets.add(assetDetails);
-                    }
-                }
-                return ResponseEntity.ok(detailedAssets);
-            }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .body("Użytkownik nie znaleziony");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .body("Błąd serwera: " + e.getMessage());
+        UserWallet wallet = user.getWallet();
+        if (wallet == null) {
+            throw new ResourceNotFoundException("Portfel nie istnieje");
         }
+
+        List<Map<String, Object>> detailedAssets = new ArrayList<>();
+        for (Map.Entry<Long, Double> entry : wallet.getAssets().entrySet()) {
+            Asset asset = assetsRepository.findById(entry.getKey())
+                    .orElseThrow(() -> new ResourceNotFoundException("Aktywo nie znalezione"));
+            Map<String, Object> assetDetails = new HashMap<>();
+            assetDetails.put("id", asset.getId());
+            assetDetails.put("symbol", asset.getSymbol());
+            assetDetails.put("name", asset.getName());
+            assetDetails.put("price", asset.getPrice());
+            assetDetails.put("amount", entry.getValue());
+            detailedAssets.add(assetDetails);
+        }
+        return ResponseEntity.ok(detailedAssets);
+
     }
 
     @Operation(summary = "Add asset to user wallet", description = "Add a specific amount of an asset to a user's wallet.")
@@ -136,45 +113,37 @@ public class UserController {
     })
     @PostMapping("/{userId}/wallet/add")
     public ResponseEntity<?> addAssetToWallet(@PathVariable Long userId, @RequestBody Map<String, Object> payload) {
-        try {
-            Long assetId = ((Number) payload.get("assetId")).longValue();
-            Double amount = ((Number) payload.get("amount")).doubleValue();
+        Long assetId = ((Number) payload.get("assetId")).longValue();
+        Double amount = ((Number) payload.get("amount")).doubleValue();
 
-            Optional<User> userOpt = userRepository.findById(userId);
-            Optional<Asset> assetOpt = assetsRepository.findById(assetId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Użytkownik o ID " + userId + " nie został znaleziony"));
 
-            if (userOpt.isPresent() && assetOpt.isPresent()) {
-                User user = userOpt.get();
-                UserWallet wallet = user.getWallet();
-                if (wallet == null) {
-                    wallet = new UserWallet(user);
-                    user.setWallet(wallet);
-                }
+        Asset asset = assetsRepository.findById(assetId)
+                .orElseThrow(() -> new ResourceNotFoundException("Aktywo o ID " + assetId + " nie zostało znalezione"));
 
-                wallet.addAsset(assetId, amount);
-                userRepository.save(user);
-
-                List<Map<String, Object>> updatedAssets = new ArrayList<>();
-                for (Map.Entry<Long, Double> entry : wallet.getAssets().entrySet()) {
-                    Optional<Asset> asset = assetsRepository.findById(entry.getKey());
-                    asset.ifPresent(value -> {
-                        Map<String, Object> assetDetails = new HashMap<>();
-                        assetDetails.put("id", value.getId());
-                        assetDetails.put("symbol", value.getSymbol());
-                        assetDetails.put("name", value.getName());
-                        assetDetails.put("price", value.getPrice());
-                        assetDetails.put("amount", entry.getValue());
-                        updatedAssets.add(assetDetails);
-                    });
-                }
-                return ResponseEntity.ok(updatedAssets);
-            }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .body("Nie znaleziono użytkownika lub aktywa");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .body("Błąd serwera: " + e.getMessage());
+        UserWallet wallet = user.getWallet();
+        if (wallet == null) {
+            wallet = new UserWallet(user);
+            user.setWallet(wallet);
         }
+
+        wallet.addAsset(assetId, amount);
+        userRepository.save(user);
+
+        List<Map<String, Object>> updatedAssets = new ArrayList<>();
+        for (Map.Entry<Long, Double> entry : wallet.getAssets().entrySet()) {
+            Asset foundAsset = assetsRepository.findById(entry.getKey()).orElseThrow(() -> new ResourceNotFoundException("Aktywo o ID " + entry.getKey() + " nie zostało znalezione"));
+            Map<String, Object> assetDetails = new HashMap<>();
+            assetDetails.put("id", foundAsset.getId());
+            assetDetails.put("symbol", foundAsset.getSymbol());
+            assetDetails.put("name", foundAsset.getName());
+            assetDetails.put("price", foundAsset.getPrice());
+            assetDetails.put("amount", entry.getValue());
+            updatedAssets.add(assetDetails);
+        }
+
+        return ResponseEntity.ok(updatedAssets);
     }
+
 }

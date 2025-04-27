@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.example.stockmarketsimulator.exception.GlobalExceptionHandler;
 import org.example.stockmarketsimulator.model.Asset;
 import org.example.stockmarketsimulator.repository.AssetsRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +32,10 @@ public class AssetsControllerTests {
 
     @BeforeEach
     public void setup() {
-        mockMvc = MockMvcBuilders.standaloneSetup(assetsController).build();
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(assetsController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
     }
 
     @Test
@@ -93,13 +97,16 @@ public class AssetsControllerTests {
 
         // Given
         Long assetId = 1L;
-        when(assetsRepository.findById(assetId)).thenReturn(Optional.empty());
+        when(assetsRepository.findById(assetId)).thenReturn(Optional.empty()); // Brak aktywa w repozytorium
 
         // When & Then
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                         .delete("/api/assets/{id}", assetId))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound()) // Oczekuj statusu 404
+                .andExpect(jsonPath("$.error").value("Aktywo o ID 1 nie zostało znalezione")) // Sprawdzenie treści błędu
+                .andExpect(jsonPath("$.status").value(404)); // Sprawdzenie kodu statusu
 
-        verify(assetsRepository, never()).deleteById(assetId);
+        // Verify that the deleteById method was not called
+        verify(assetsRepository, never()).deleteById(assetId); // Potwierdzenie, że nie próbowaliśmy usunąć aktywa
     }
 }
