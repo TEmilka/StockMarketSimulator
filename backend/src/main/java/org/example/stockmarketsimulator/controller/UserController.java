@@ -17,6 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -36,6 +37,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "List of users retrieved successfully"),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public List<User> getUsers() {
         return userRepository.findAll();

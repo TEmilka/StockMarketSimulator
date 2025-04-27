@@ -12,10 +12,12 @@ import org.example.stockmarketsimulator.repository.AssetsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+
 
 @RestController
 @RequestMapping("/api/assets")
@@ -29,6 +31,7 @@ public class AssetsController {
             @ApiResponse(responseCode = "200", description = "List of assets retrieved successfully", content = @Content(schema = @Schema(implementation = Asset.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping
     public List<Asset> getAssets() {
         return assetsRepository.findAll();
@@ -40,6 +43,7 @@ public class AssetsController {
             @ApiResponse(responseCode = "400", description = "Bad request, missing required fields", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Asset> addAsset(@RequestBody Asset asset) {
         if (asset.getName() == null || asset.getSymbol() == null) {
@@ -57,6 +61,7 @@ public class AssetsController {
             @ApiResponse(responseCode = "404", description = "Asset not found", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAsset(@PathVariable Long id) {
         Optional<Asset> assetOpt = assetsRepository.findById(id);
