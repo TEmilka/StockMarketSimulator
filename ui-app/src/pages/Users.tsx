@@ -20,11 +20,33 @@ function Users() {
     const { register, handleSubmit, reset } = useForm<UserForm>();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [isAdmin, setIsAdmin] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const checkAdminStatus = () => {
+            const token = localStorage.getItem("accessToken");
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split(".")[1]));
+                    setIsAdmin(payload.authorities === "ROLE_ADMIN");
+                } catch (err) {
+                    console.error("Error parsing token:", err);
+                    setIsAdmin(false);
+                }
+            }
+        };
+        checkAdminStatus();
+    }, []);
 
     const fetchUsers = async () => {
         try {
-            const response = await fetch("http://localhost:8000/api/users");
+            const accessToken = localStorage.getItem("accessToken");
+            const response = await fetch("http://localhost:8000/api/users", {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
             if (!response.ok) {
                 throw new Error("Nie udało się pobrać użytkowników");
             }
@@ -37,7 +59,7 @@ function Users() {
 
     useEffect(() => {
         fetchUsers();
-    }, []);
+    }, [isAdmin]);
 
     const addUserToApi = async (data: UserForm) => {
         setLoading(true);
@@ -91,47 +113,56 @@ function Users() {
 
     return (
         <div className="container">
-            <h1 className="title">Stock Market Simulator</h1>
+            <h1 className="title">Lista Użytkowników</h1>
 
-            <form onSubmit={handleSubmit(addUserToApi)} className="form">
-                <input
-                    {...register("name", { required: true })}
-                    placeholder="Imię"
-                    className="input"
-                />
-                <input
-                    {...register("email", { required: true })}
-                    placeholder="Email"
-                    type="email"
-                    className="input input-email"
-                />
-                <button
-                    type="submit"
-                    className="button"
-                    disabled={loading}
-                >
-                    {loading ? "Dodawanie..." : "Dodaj użytkownika"}
-                </button>
-            </form>
+            {!isAdmin ? (
+                <div className="error-message">
+                    Nie masz uprawnień do wyświetlania listy użytkowników.
+                    Tylko administrator ma dostęp do tej funkcjonalności.
+                </div>
+            ) : (
+                <>
+                    <form onSubmit={handleSubmit(addUserToApi)} className="form">
+                        <input
+                            {...register("name", { required: true })}
+                            placeholder="Imię"
+                            className="input"
+                        />
+                        <input
+                            {...register("email", { required: true })}
+                            placeholder="Email"
+                            type="email"
+                            className="input input-email"
+                        />
+                        <button
+                            type="submit"
+                            className="button"
+                            disabled={loading}
+                        >
+                            {loading ? "Dodawanie..." : "Dodaj użytkownika"}
+                        </button>
+                    </form>
 
-            {error && <p className="error">{error}</p>}
+                    {error && <p className="error">{error}</p>}
 
-            <div className="user-list">
-                <h2 className="user-list-title">Lista użytkowników</h2>
-                {users.length > 0 ? (
-                    <ul>
-                        {users.map((user: User, idx: number) => (
-                            <li key={idx} className="user-item">
-                                {user.name} - {user.email}
-                                <button onClick={() => deleteUser(user.id!)}>Usuń</button>
-                                <button onClick={() => viewUserWallet(user.id!)}>Zobacz portfel</button>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p>Brak użytkowników</p>
-                )}
-            </div>
+                    <div className="user-list">
+                        <h2 className="user-list-title">Lista użytkowników</h2>
+                        {users.length > 0 ? (
+                            <ul>
+                                {users.map((user: User, idx: number) => (
+                                    <li key={idx} className="user-item">
+                                        {user.name} - {user.email}
+                                        <button onClick={() => deleteUser(user.id!)}>Usuń</button>
+                                        <button onClick={() => viewUserWallet(user.id!)}>Zobacz portfel</button>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p>Brak użytkowników</p>
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     );
 }

@@ -1,5 +1,6 @@
 package org.example.stockmarketsimulator.config;
 
+import org.example.stockmarketsimulator.security.CustomAccessDeniedHandler;
 import org.example.stockmarketsimulator.security.CustomUserDetailsService;
 import org.example.stockmarketsimulator.security.JwtAuthenticationFilter;
 import org.example.stockmarketsimulator.security.JwtUtils;
@@ -36,7 +37,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    JwtAuthenticationFilter jwtFilter,
-                                                   CustomUserDetailsService userDetailsService) throws Exception {
+                                                   CustomUserDetailsService userDetailsService,
+                                                   CustomAccessDeniedHandler accessDeniedHandler) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -51,6 +53,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/assets/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated()
                 )
+                .exceptionHandling(handler -> {
+                    handler.accessDeniedHandler(accessDeniedHandler);
+                })
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

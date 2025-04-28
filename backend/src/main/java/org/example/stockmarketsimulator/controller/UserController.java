@@ -44,8 +44,16 @@ public class UserController {
     })
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public List<User> getUsers() {
-        return userRepository.findAll();
+    public ResponseEntity<?> getUsers() {
+        try {
+            List<User> users = userRepository.findAll();
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "Wystąpił błąd podczas pobierania użytkowników");
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
     @Operation(summary = "Add a new user", description = "Create a new user with a wallet.")
