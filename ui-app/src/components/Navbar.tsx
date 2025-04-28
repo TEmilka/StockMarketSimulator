@@ -6,8 +6,9 @@ function Navbar() {
     const accessToken = localStorage.getItem("accessToken");
 
     const handleMyAccountClick = () => {
-        if (accessToken) {
-            navigate(`/user-wallet/${getUserIdFromToken(accessToken)}`);
+        const userId = localStorage.getItem("userId");
+        if (accessToken && userId) {
+            navigate(`/user-wallet/${userId}`);
         } else {
             navigate("/login");
         }
@@ -15,13 +16,8 @@ function Navbar() {
 
     const handleLogout = () => {
         localStorage.removeItem("accessToken");
+        localStorage.removeItem("userId");
         navigate("/login");
-    };
-
-    const getUserIdFromToken = (token: string): string => {
-        // Zakładamy, że token jest w formacie JWT
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        return payload.userId;
     };
 
     return (

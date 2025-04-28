@@ -43,15 +43,20 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
 
-            String token = jwtUtils.generateToken(request.getUsername());
+            User user = userRepository.findByUsername(request.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            String token = jwtUtils.generateToken(user.getUsername());
 
             Map<String, String> response = new HashMap<>();
             response.put("token", token);
+            response.put("userId", user.getId().toString());
             return response;
         } catch (AuthenticationException e) {
             throw new RuntimeException("Invalid credentials");
         }
     }
+
     @Operation(summary = "Rejestracja nowego użytkownika", description = "Tworzy nowego użytkownika z hasłem i zapisuje w bazie danych.")
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody @Valid UserRegistrationDTO userDTO) {

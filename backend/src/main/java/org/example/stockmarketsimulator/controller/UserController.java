@@ -92,29 +92,33 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @GetMapping("/{userId}/wallet/details")
-    public ResponseEntity<?> getUserWalletDetails(@PathVariable Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Użytkownik nie znaleziony"));
+    public ResponseEntity<?> getUserWalletDetails(@PathVariable String userId) {
+        try {
+            Long userIdLong = Long.parseLong(userId);
+            User user = userRepository.findById(userIdLong)
+                    .orElseThrow(() -> new ResourceNotFoundException("Użytkownik nie znaleziony"));
 
-        UserWallet wallet = user.getWallet();
-        if (wallet == null) {
-            throw new ResourceNotFoundException("Portfel nie istnieje");
+            UserWallet wallet = user.getWallet();
+            if (wallet == null) {
+                return ResponseEntity.ok(Collections.emptyList());
+            }
+
+            List<Map<String, Object>> detailedAssets = new ArrayList<>();
+            for (Map.Entry<Long, Double> entry : wallet.getAssets().entrySet()) {
+                Asset asset = assetsRepository.findById(entry.getKey())
+                        .orElseThrow(() -> new ResourceNotFoundException("Aktywo nie znalezione"));
+                Map<String, Object> assetDetails = new HashMap<>();
+                assetDetails.put("id", asset.getId());
+                assetDetails.put("symbol", asset.getSymbol());
+                assetDetails.put("name", asset.getName());
+                assetDetails.put("price", asset.getPrice());
+                assetDetails.put("amount", entry.getValue());
+                detailedAssets.add(assetDetails);
+            }
+            return ResponseEntity.ok(detailedAssets);
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("Nieprawidłowy format ID użytkownika");
         }
-
-        List<Map<String, Object>> detailedAssets = new ArrayList<>();
-        for (Map.Entry<Long, Double> entry : wallet.getAssets().entrySet()) {
-            Asset asset = assetsRepository.findById(entry.getKey())
-                    .orElseThrow(() -> new ResourceNotFoundException("Aktywo nie znalezione"));
-            Map<String, Object> assetDetails = new HashMap<>();
-            assetDetails.put("id", asset.getId());
-            assetDetails.put("symbol", asset.getSymbol());
-            assetDetails.put("name", asset.getName());
-            assetDetails.put("price", asset.getPrice());
-            assetDetails.put("amount", entry.getValue());
-            detailedAssets.add(assetDetails);
-        }
-        return ResponseEntity.ok(detailedAssets);
-
     }
 
     @Operation(summary = "Add asset to user wallet", description = "Add a specific amount of an asset to a user's wallet.")
