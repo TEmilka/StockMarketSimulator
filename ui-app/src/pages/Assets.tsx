@@ -20,10 +20,16 @@ function Assets() {
     const [error, setError] = useState("");
     const [assets, setAssets] = useState<Asset[]>([]);
     const { register, handleSubmit, reset } = useForm<AssetForm>();
+    const [isAdmin, setIsAdmin] = useState(false);
 
     const fetchAssets = async () => {
         try {
-            const response = await fetch("http://localhost:8000/api/assets");
+            const accessToken = localStorage.getItem("accessToken");
+            const response = await fetch("http://localhost:8000/api/assets", {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
             if (!response.ok) {
                 throw new Error("Nie udało się pobrać assetów");
             }
@@ -38,13 +44,33 @@ function Assets() {
         fetchAssets();
     }, []);
 
+    useEffect(() => {
+        const checkAdminStatus = () => {
+            const token = localStorage.getItem("accessToken");
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split(".")[1]));
+                    setIsAdmin(payload.authorities === "ROLE_ADMIN");
+                } catch (err) {
+                    console.error("Error parsing token:", err);
+                    setIsAdmin(false);
+                }
+            }
+        };
+        checkAdminStatus();
+    }, []);
+
     const addAssetToApi = async (data: AssetForm) => {
         setLoading(true);
         setError("");
         try {
+            const accessToken = localStorage.getItem("accessToken");
             const response = await fetch("http://localhost:8000/api/assets", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    'Authorization': `Bearer ${accessToken}`
+                },
                 body: JSON.stringify({
                     symbol: data.symbol,
                     name: data.name,
@@ -67,8 +93,12 @@ function Assets() {
 
     const deleteAsset = async (id: number) => {
         try {
+            const accessToken = localStorage.getItem("accessToken");
             const response = await fetch(`http://localhost:8000/api/assets/${id}`, {
                 method: "DELETE",
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
             });
 
             if (response.ok) {
@@ -83,33 +113,35 @@ function Assets() {
 
     return (
         <div className="container">
-            <h1 className="title">Dodaj Asset</h1>
+            <h1 className="title">Lista Aktywów</h1>
 
-            <form onSubmit={handleSubmit(addAssetToApi)} className="form">
-                <input
-                    {...register("symbol", { required: true })}
-                    placeholder="Symbol"
-                    className="input"
-                />
-                <input
-                    {...register("name", { required: true })}
-                    placeholder="Nazwa"
-                    className="input input-email"
-                />
-                <input
-                    {...register("price", { required: true })}
-                    placeholder="Cena"
-                    type="number"
-                    className="input input-email"
-                />
-                <button
-                    type="submit"
-                    className="button"
-                    disabled={loading}
-                >
-                    {loading ? "Dodawanie..." : "Dodaj asset"}
-                </button>
-            </form>
+            {isAdmin && (
+                <form onSubmit={handleSubmit(addAssetToApi)} className="form">
+                    <input
+                        {...register("symbol", { required: true })}
+                        placeholder="Symbol"
+                        className="input"
+                    />
+                    <input
+                        {...register("name", { required: true })}
+                        placeholder="Nazwa"
+                        className="input input-email"
+                    />
+                    <input
+                        {...register("price", { required: true })}
+                        placeholder="Cena"
+                        type="number"
+                        className="input input-email"
+                    />
+                    <button
+                        type="submit"
+                        className="button"
+                        disabled={loading}
+                    >
+                        {loading ? "Dodawanie..." : "Dodaj asset"}
+                    </button>
+                </form>
+            )}
 
             {error && <p className="error">{error}</p>}
 
@@ -120,7 +152,9 @@ function Assets() {
                         {assets.map((asset: Asset, idx: number) => (
                             <li key={idx} className="asset-item">
                                 {asset.name} ({asset.symbol}) - {asset.price} USD
-                                <button onClick={() => deleteAsset(asset.id)}>Usuń</button>
+                                {isAdmin && (
+                                    <button onClick={() => deleteAsset(asset.id)}>Usuń</button>
+                                )}
                             </li>
                         ))}
                     </ul>

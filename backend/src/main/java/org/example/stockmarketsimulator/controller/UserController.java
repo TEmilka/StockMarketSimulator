@@ -92,6 +92,7 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @GetMapping("/{userId}/wallet/details")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> getUserWalletDetails(@PathVariable String userId) {
         try {
             Long userIdLong = Long.parseLong(userId);
@@ -128,6 +129,7 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @PostMapping("/{userId}/wallet/add")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> addAssetToWallet(@PathVariable Long userId, @RequestBody Map<String, Object> payload) {
         Long assetId = ((Number) payload.get("assetId")).longValue();
         Double amount = ((Number) payload.get("amount")).doubleValue();

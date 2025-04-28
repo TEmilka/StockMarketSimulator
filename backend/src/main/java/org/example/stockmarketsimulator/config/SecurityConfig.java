@@ -24,11 +24,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Bean
-    public JwtUtils jwtUtils() {
-        return new JwtUtils();
-    }
-
-    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
@@ -51,8 +46,9 @@ public class SecurityConfig {
                         .requestMatchers("/favicon.ico").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/api/users/{userId}/wallet/details").permitAll()
-                        .requestMatchers("/api/assets").permitAll()
+                        .requestMatchers("/api/users/*/wallet/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/assets/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

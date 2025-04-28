@@ -21,7 +21,12 @@ function UserWallet() {
     const fetchWalletDetails = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:8000/api/users/${userId}/wallet/details`);
+            const accessToken = localStorage.getItem("accessToken");
+            const response = await fetch(`http://localhost:8000/api/users/${userId}/wallet/details`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
             if (!response.ok) {
                 throw new Error("Nie udało się pobrać portfela");
             }
@@ -41,9 +46,13 @@ function UserWallet() {
 
     const addAssetToWallet = async (assetId: string, amount: string) => {
         try {
+            const accessToken = localStorage.getItem("accessToken");
             const response = await fetch(`http://localhost:8000/api/users/${userId}/wallet/add`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    'Authorization': `Bearer ${accessToken}`
+                },
                 body: JSON.stringify({ assetId: Number(assetId), amount: Number(amount) }),
             });
 

@@ -46,13 +46,13 @@ public class CustomUserDetailsService implements UserDetailsService {
             return inMemoryManager.loadUserByUsername(username);
         }
 
-        // Jeśli to nie statyczny użytkownik, szukamy w bazie danych
-        return userRepository.findByUsername(username)
-                .map(user -> new org.springframework.security.core.userdetails.User(
-                        user.getUsername(),
-                        user.getPassword(),
-                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
-                ))
-                .orElseThrow(() -> new UsernameNotFoundException("Użytkownik nie znaleziony: " + username));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+
+        return org.springframework.security.core.userdetails.User
+                .withUsername(user.getUsername())
+                .password(user.getPassword())
+                .authorities(user.getRole()) // Używamy roli z encji użytkownika
+                .build();
     }
 }

@@ -31,8 +31,8 @@ public class AssetsController {
             @ApiResponse(responseCode = "200", description = "List of assets retrieved successfully", content = @Content(schema = @Schema(implementation = Asset.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public List<Asset> getAssets() {
         return assetsRepository.findAll();
     }
@@ -43,8 +43,8 @@ public class AssetsController {
             @ApiResponse(responseCode = "400", description = "Bad request, missing required fields", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Asset> addAsset(@RequestBody Asset asset) {
         if (asset.getName() == null || asset.getSymbol() == null) {
             throw new BadRequestException("Name and symbol are required for the asset.");
@@ -61,8 +61,8 @@ public class AssetsController {
             @ApiResponse(responseCode = "404", description = "Asset not found", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteAsset(@PathVariable Long id) {
         Optional<Asset> assetOpt = assetsRepository.findById(id);
         if (assetOpt.isEmpty()) {

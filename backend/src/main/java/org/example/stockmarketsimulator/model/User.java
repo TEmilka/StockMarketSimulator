@@ -19,6 +19,9 @@ public class User {
     @Column(nullable = false)
     private String password; // <-- NOWE POLE
 
+    @Column(nullable = false)
+    private String role = "ROLE_USER"; // Domyślnie każdy nowy użytkownik ma rolę USER
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private UserWallet wallet;
@@ -62,6 +65,14 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public UserWallet getWallet() {
