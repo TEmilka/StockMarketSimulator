@@ -3,6 +3,10 @@ package org.example.stockmarketsimulator.controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.example.stockmarketsimulator.dto.UserRegistrationDTO;
 import org.example.stockmarketsimulator.exception.BadRequestException;
 import org.example.stockmarketsimulator.model.User;
@@ -42,6 +46,15 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Operation(
+            summary = "Logowanie użytkownika",
+            description = "Logowanie użytkownika na podstawie nazwy użytkownika i hasła. Zwraca token JWT, który należy używać do autoryzacji dalszych żądań."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Zalogowano pomyślnie, zwrócono token JWT", content = @Content(schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "400", description = "Błędne dane logowania", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Błąd serwera", content = @Content)
+    })
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody User request) {
         try {
@@ -63,7 +76,15 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "Rejestracja nowego użytkownika", description = "Tworzy nowego użytkownika z hasłem i zapisuje w bazie danych.")
+    @Operation(
+            summary = "Rejestracja nowego użytkownika",
+            description = "Tworzy nowego użytkownika w systemie z nazwą użytkownika, emailem i hasłem. Hasło jest szyfrowane przed zapisem."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Użytkownik zarejestrowany pomyślnie", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "400", description = "Użytkownik o podanym emailu lub nazwie już istnieje", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Błąd serwera", content = @Content)
+    })
     @PostMapping(value = "/register", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> registerUser(@RequestBody @Valid UserRegistrationDTO userDTO) {
         if (userRepository.existsByEmail(userDTO.getEmail())) {

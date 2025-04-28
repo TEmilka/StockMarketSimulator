@@ -24,12 +24,7 @@ function Assets() {
 
     const fetchAssets = async () => {
         try {
-            const accessToken = localStorage.getItem("accessToken");
-            const response = await fetch("http://localhost:8000/api/assets", {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
+            const response = await fetch("http://localhost:8000/api/assets");
             if (!response.ok) {
                 throw new Error("Nie udało się pobrać assetów");
             }
