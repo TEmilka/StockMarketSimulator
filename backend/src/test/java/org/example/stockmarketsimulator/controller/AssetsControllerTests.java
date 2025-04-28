@@ -62,7 +62,7 @@ public class AssetsControllerTests {
 
         // Given
         Asset asset = new Asset("AAPL", 150.0, "Apple Inc.");
-        Asset savedAsset = new Asset(1L, "AAPL", 150.0, "Apple Inc.");  // Załóżmy, że po zapisaniu obiekt dostaje ID
+        Asset savedAsset = new Asset(1L, "AAPL", 150.0, "Apple Inc.");
 
         // When & Then
         when(assetsRepository.save(any(Asset.class))).thenReturn(savedAsset);
@@ -97,16 +97,15 @@ public class AssetsControllerTests {
 
         // Given
         Long assetId = 1L;
-        when(assetsRepository.findById(assetId)).thenReturn(Optional.empty()); // Brak aktywa w repozytorium
-
+        when(assetsRepository.findById(assetId)).thenReturn(Optional.empty());
         // When & Then
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                         .delete("/api/assets/{id}", assetId))
-                .andExpect(status().isNotFound()) // Oczekuj statusu 404
-                .andExpect(jsonPath("$.error").value("Aktywo o ID 1 nie zostało znalezione")) // Sprawdzenie treści błędu
-                .andExpect(jsonPath("$.status").value(404)); // Sprawdzenie kodu statusu
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Aktywo o ID 1 nie zostało znalezione."))
+                .andExpect(jsonPath("$.status").value(404));
 
         // Verify that the deleteById method was not called
-        verify(assetsRepository, never()).deleteById(assetId); // Potwierdzenie, że nie próbowaliśmy usunąć aktywa
+        verify(assetsRepository, never()).deleteById(assetId);
     }
 }

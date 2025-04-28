@@ -16,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -47,7 +46,7 @@ public class UserControllerTests {
     @Test
     void getUsers_shouldReturnUsers() throws Exception {
         // Given
-        User user = new User("John Doe", "john.doe@example.com", "password123"); // Zaktualizowano
+        User user = new User("John Doe", "john.doe@example.com", "password123");
         when(userRepository.findAll()).thenReturn(Collections.singletonList(user));
 
         // When & Then
@@ -60,7 +59,7 @@ public class UserControllerTests {
     @Test
     void addUser_shouldReturnCreatedUser() throws Exception {
         // Given
-        User user = new User("John Doe", "john.doe@example.com", "password123"); // Zaktualizowano
+        User user = new User("John Doe", "john.doe@example.com", "password123");
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         // When & Then
@@ -80,14 +79,14 @@ public class UserControllerTests {
                         .contentType("application/json")
                         .content("{\"name\":\"John Doe\"}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Imię, email i hasło są wymagane"))  // Zaktualizowany komunikat
+                .andExpect(jsonPath("$.error").value("Nazwa użytkownika, email i hasło są wymagane."))
                 .andExpect(jsonPath("$.status").value(400));
 
         mockMvc.perform(post("/api/users")
                         .contentType("application/json")
                         .content("{\"email\":\"john.doe@example.com\",\"password\":\"password123\"}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Imię, email i hasło są wymagane"))  // Zaktualizowany komunikat
+                .andExpect(jsonPath("$.error").value("Nazwa użytkownika, email i hasło są wymagane."))
                 .andExpect(jsonPath("$.status").value(400));
     }
 
@@ -95,7 +94,7 @@ public class UserControllerTests {
     void deleteUser_shouldReturnNoContent_whenUserExists() throws Exception {
         // Given
         Long userId = 1L;
-        User user = new User("John Doe", "john.doe@example.com", "password123"); // Zaktualizowano
+        User user = new User("John Doe", "john.doe@example.com", "password123");
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // When & Then
@@ -122,7 +121,7 @@ public class UserControllerTests {
     void getUserWalletDetails_shouldReturnWalletDetails() throws Exception {
         // Given
         Long userId = 1L;
-        User user = new User("John Doe", "john.doe@example.com", "password123"); // Zaktualizowano
+        User user = new User("John Doe", "john.doe@example.com", "password123");
         UserWallet wallet = new UserWallet(user);
         wallet.addAsset(1L, 10.0);
         user.setWallet(wallet);
@@ -149,7 +148,7 @@ public class UserControllerTests {
         // When & Then
         mockMvc.perform(get("/api/users/{userId}/wallet/details", userId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Użytkownik nie znaleziony"))
+                .andExpect(jsonPath("$.error").value("Użytkownik nie został znaleziony"))
                 .andExpect(jsonPath("$.status").value(404));
     }
 
@@ -160,7 +159,7 @@ public class UserControllerTests {
         Long assetId = 1L;
         Double amount = 10.0;
 
-        User user = new User("John Doe", "john.doe@example.com", "password123"); // Zaktualizowano
+        User user = new User("John Doe", "john.doe@example.com", "password123");
         Asset asset = new Asset("AAPL", 150.0, "Apple Inc.");
         UserWallet wallet = new UserWallet(user);
         user.setWallet(wallet);
