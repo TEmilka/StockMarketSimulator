@@ -60,25 +60,31 @@ function Assets() {
         setError("");
         try {
             const accessToken = localStorage.getItem("accessToken");
+            if (!accessToken) {
+                throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
+            }
+
             const response = await fetch("http://localhost:8000/api/assets", {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",
                     'Authorization': `Bearer ${accessToken}`
                 },
-                body: JSON.stringify({
-                    symbol: data.symbol,
-                    name: data.name,
-                    price: data.price,
-                }),
+                body: JSON.stringify(data),
             });
 
+            if (response.status === 401) {
+                throw new Error("Sesja wygasła. Zaloguj się ponownie.");
+            }
+            if (response.status === 403) {
+                throw new Error("Brak uprawnień do dodawania aktywów.");
+            }
             if (!response.ok) {
                 throw new Error("Nie udało się dodać assetu");
             }
 
             reset();
-            fetchAssets();
+            await fetchAssets();
         } catch (err) {
             setError((err as Error).message);
         } finally {
@@ -89,6 +95,10 @@ function Assets() {
     const deleteAsset = async (id: number) => {
         try {
             const accessToken = localStorage.getItem("accessToken");
+            if (!accessToken) {
+                throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
+            }
+
             const response = await fetch(`http://localhost:8000/api/assets/${id}`, {
                 method: "DELETE",
                 headers: {
@@ -96,11 +106,17 @@ function Assets() {
                 }
             });
 
-            if (response.ok) {
-                setAssets(assets.filter(asset => asset.id !== id));
-            } else {
-                setError("Nie udało się usunąć assetu");
+            if (response.status === 401) {
+                throw new Error("Sesja wygasła. Zaloguj się ponownie.");
             }
+            if (response.status === 403) {
+                throw new Error("Brak uprawnień do usuwania aktywów.");
+            }
+            if (!response.ok) {
+                throw new Error("Nie udało się usunąć assetu");
+            }
+
+            setAssets(assets.filter(asset => asset.id !== id));
         } catch (err) {
             setError((err as Error).message);
         }

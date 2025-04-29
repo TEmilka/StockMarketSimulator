@@ -13,13 +13,21 @@ import org.example.stockmarketsimulator.model.User;
 import org.example.stockmarketsimulator.model.UserWallet;
 import org.example.stockmarketsimulator.repository.AssetsRepository;
 import org.example.stockmarketsimulator.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -40,6 +48,8 @@ public class UserController {
     private AssetsRepository assetsRepository;
 
     private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @Operation(
             summary = "Pobierz wszystkich użytkowników",
@@ -162,37 +172,53 @@ public class UserController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PostMapping("/{userId}/wallet/add")
     public ResponseEntity<?> addAssetToWallet(@PathVariable Long userId, @RequestBody Map<String, Object> payload) {
-        Long assetId = ((Number) payload.get("assetId")).longValue();
-        Double amount = ((Number) payload.get("amount")).doubleValue();
+        try {
+            logger.debug("Received request to add asset. UserId: {}, Payload: {}", userId, payload);
+            
+            if (!payload.containsKey("assetId") || !payload.containsKey("amount")) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Missing required fields: assetId and amount"));
+            }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Użytkownik o ID " + userId + " nie został znaleziony"));
+            Long assetId = Long.valueOf(payload.get("assetId").toString());
+            Double amount = Double.valueOf(payload.get("amount").toString());
 
-        Asset asset = assetsRepository.findById(assetId)
-                .orElseThrow(() -> new ResourceNotFoundException("Aktywo o ID " + assetId + " nie zostało znalezione"));
+            logger.debug("Looking for user with ID: {}", userId);
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
 
-        UserWallet wallet = user.getWallet();
-        if (wallet == null) {
-            wallet = new UserWallet(user);
-            user.setWallet(wallet);
+            logger.debug("Looking for asset with ID: {}", assetId);
+            Asset asset = assetsRepository.findById(assetId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Asset not found with ID: " + assetId));
+
+            logger.debug("Found asset: {}", asset.getSymbol());
+
+            UserWallet wallet = user.getWallet();
+            if (wallet == null) {
+                logger.debug("Creating new wallet for user");
+                wallet = new UserWallet(user);
+                user.setWallet(wallet);
+            }
+
+            logger.debug("Adding {} units of asset {} to wallet", amount, asset.getSymbol());
+            wallet.addAsset(assetId, amount);
+            userRepository.save(user);
+
+            logger.debug("Successfully added asset to wallet");
+            return getUserWalletDetails(userId.toString());
+
+        } catch (ResourceNotFoundException e) {
+            logger.error("Resource not found error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (NumberFormatException e) {
+            logger.error("Number format error: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Invalid number format for assetId or amount"));
+        } catch (Exception e) {
+            logger.error("Error adding asset to wallet", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to add asset: " + e.getMessage()));
         }
-
-        wallet.addAsset(assetId, amount);
-        userRepository.save(user);
-
-        List<Map<String, Object>> updatedAssets = new ArrayList<>();
-        for (Map.Entry<Long, Double> entry : wallet.getAssets().entrySet()) {
-            Asset foundAsset = assetsRepository.findById(entry.getKey())
-                    .orElseThrow(() -> new ResourceNotFoundException("Aktywo o ID " + entry.getKey() + " nie zostało znalezione"));
-            Map<String, Object> assetDetails = new HashMap<>();
-            assetDetails.put("id", foundAsset.getId());
-            assetDetails.put("symbol", foundAsset.getSymbol());
-            assetDetails.put("name", foundAsset.getName());
-            assetDetails.put("price", foundAsset.getPrice());
-            assetDetails.put("amount", entry.getValue());
-            updatedAssets.add(assetDetails);
-        }
-
-        return ResponseEntity.ok(updatedAssets);
     }
 }

@@ -1,15 +1,20 @@
 package org.example.stockmarketsimulator.security;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
+import java.security.Key;
+import java.util.Date;
+
 import org.example.stockmarketsimulator.model.User;
 import org.example.stockmarketsimulator.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
-import java.util.Date;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
 //Klasa odpowiedzialna za generowanie, walidację i dekodowanie tokenów JWT
 @Component
@@ -27,11 +32,11 @@ public class JwtUtils {
     public String generateToken(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-                
+
         return Jwts.builder()
                 .setSubject(username)
-                .claim("userId", user.getId())
-                .claim("authorities", username.equals("admin") ? "ROLE_ADMIN" : "ROLE_USER")
+                .claim("userId", user.getId().toString())
+                .claim("authorities", user.getRole())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -53,6 +58,24 @@ public class JwtUtils {
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
+        }
+    }
+
+    public static String getCurrentUserId(Authentication authentication) {
+        if (authentication == null || authentication.getCredentials() == null) {
+            return null;
+        }
+        
+        try {
+            String token = authentication.getCredentials().toString();
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(SECRET_KEY.getBytes())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims.get("userId", String.class);
+        } catch (Exception e) {
+            return null;
         }
     }
 }
