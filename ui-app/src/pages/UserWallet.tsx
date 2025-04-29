@@ -21,7 +21,6 @@ function UserWallet() {
 
     const fetchWalletDetails = async () => {
         try {
-            setLoading(true);
             const accessToken = localStorage.getItem("accessToken");
             if (!accessToken) {
                 throw new Error("Brak autoryzacji. Zaloguj się ponownie.");

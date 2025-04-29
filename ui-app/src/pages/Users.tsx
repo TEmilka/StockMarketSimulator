@@ -42,18 +42,31 @@ function Users() {
     const fetchUsers = async () => {
         try {
             const accessToken = localStorage.getItem("accessToken");
+            if (!accessToken) {
+                throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
+            }
+            
             const response = await fetch("http://localhost:8000/api/users", {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }
             });
+            
+            if (response.status === 401) {
+                throw new Error("Sesja wygasła. Zaloguj się ponownie.");
+            }
+            if (response.status === 403) {
+                throw new Error("Brak uprawnień do wyświetlania użytkowników.");
+            }
             if (!response.ok) {
                 throw new Error("Nie udało się pobrać użytkowników");
             }
+            
             const data = await response.json();
             setUsers(data);
         } catch (err) {
             setError((err as Error).message);
+            console.error('Error fetching users:', err);
         }
     };
 
@@ -93,17 +106,32 @@ function Users() {
 
     const deleteUser = async (id: number) => {
         try {
+            const accessToken = localStorage.getItem("accessToken");
+            if (!accessToken) {
+                throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
+            }
+
             const response = await fetch(`http://localhost:8000/api/users/${id}`, {
                 method: "DELETE",
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
             });
 
-            if (response.ok) {
-                setUsers(users.filter(user => user.id !== id));
-            } else {
-                setError("Nie udało się usunąć użytkownika");
+            if (response.status === 401) {
+                throw new Error("Sesja wygasła. Zaloguj się ponownie.");
             }
-        } catch (err) {
-            setError((err as Error).message);
+            if (response.status === 403) {
+                throw new Error("Brak uprawnień do usuwania użytkowników.");
+            }
+            if (!response.ok) {
+                throw new Error("Nie udało się usunąć użytkownika");
+            }
+
+            setUsers(users.filter(user => user.id !== id));
+        } catch (error) {
+            setError((error as Error).message);
+            console.error('Error deleting user:', error);
         }
     };
 
