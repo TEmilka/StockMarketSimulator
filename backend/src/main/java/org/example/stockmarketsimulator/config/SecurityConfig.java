@@ -61,6 +61,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui.html").permitAll()
                         .requestMatchers("/api/docs-ui", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/api/swagger-ui/index.html").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/notify").permitAll()
                         .requestMatchers("/api/assets").permitAll()
                         .requestMatchers("/api/users/{userId}/wallet/details").authenticated()
                         .requestMatchers("/api/users/{userId}/wallet/add").authenticated()
