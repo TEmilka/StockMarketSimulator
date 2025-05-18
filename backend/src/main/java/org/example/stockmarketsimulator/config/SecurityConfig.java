@@ -59,7 +59,7 @@ public class SecurityConfig {
                         .requestMatchers("/favicon.ico").permitAll()
                         .requestMatchers("/api/docs/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()
-                        .requestMatchers("/api/docs-ui", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/api/swagger-ui/index.html").permitAll() // Ensure public access to Swagger
+                        .requestMatchers("/api/docs-ui", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/api/swagger-ui/index.html").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/assets").permitAll()
                         .requestMatchers("/api/users/{userId}/wallet/details").authenticated()

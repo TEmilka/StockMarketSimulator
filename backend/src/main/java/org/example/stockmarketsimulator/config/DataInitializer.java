@@ -19,7 +19,6 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Sprawdź czy admin już istnieje
         if (!userRepository.existsByUsername("admin")) {
             User admin = new User();
             admin.setUsername("admin");

@@ -27,7 +27,7 @@ public class SwaggerConfig {
                         .title("Stock Market Simulator API")
                         .version("1.0")
                         .description("API documentation for Stock Market Simulator"))
-                .addSecurityItem(new SecurityRequirement().addList("bearerAuth")) // Correct usage of SecurityRequirement
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new io.swagger.v3.oas.models.Components()
                         .addSecuritySchemes("bearerAuth",
                                 new io.swagger.v3.oas.models.security.SecurityScheme()
