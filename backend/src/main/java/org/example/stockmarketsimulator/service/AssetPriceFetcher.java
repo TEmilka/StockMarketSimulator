@@ -1,8 +1,11 @@
 package org.example.stockmarketsimulator.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
+import org.example.stockmarketsimulator.config.RabbitConfig;
 import org.example.stockmarketsimulator.model.Asset;
 import org.example.stockmarketsimulator.repository.AssetsRepository;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -25,6 +28,11 @@ public class AssetPriceFetcher {
     private final String API_TOKEN = "d0ln61hr01qpni305vj0d0ln61hr01qpni305vjg";
     private final Logger logger = LoggerFactory.getLogger(AssetPriceFetcher.class);
 
+    @Autowired
+    private AmqpTemplate amqpTemplate;
+
+    @Autowired
+    private ObjectMapper objectMapper;
     @Autowired
     public AssetPriceFetcher(AssetsRepository assetsRepository) {
         this.assetsRepository = assetsRepository;
@@ -73,6 +81,14 @@ public class AssetPriceFetcher {
 
             assetsRepository.saveAll(assets);
             logger.info("Ceny aktywów zostały zaktualizowane");
+            // Wysyłanie wiadomości do RabbitMQ
+            for (Asset asset : assets) {
+                if (prices.containsKey(asset.getSymbol())) {
+                    String message = objectMapper.writeValueAsString(asset);
+                    amqpTemplate.convertAndSend(RabbitConfig.EXCHANGE, "asset.price.updated", message);
+                    logger.debug("Wysłano wiadomość do kolejki: {}", message);
+                }
+            }
         } catch (Exception e) {
             logger.error("Błąd podczas aktualizacji cen aktywów: {}", e.getMessage());
         }
