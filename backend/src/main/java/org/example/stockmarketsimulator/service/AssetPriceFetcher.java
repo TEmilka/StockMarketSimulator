@@ -7,6 +7,11 @@ import org.example.stockmarketsimulator.model.Asset;
 import org.example.stockmarketsimulator.model.AssetPriceHistory;
 import org.example.stockmarketsimulator.repository.AssetsRepository;
 import org.example.stockmarketsimulator.repository.AssetPriceHistoryRepository;
+import org.example.stockmarketsimulator.repository.UserRepository;
+import org.example.stockmarketsimulator.model.User;
+import org.example.stockmarketsimulator.repository.TransactionsRepository;
+import org.example.stockmarketsimulator.model.UserWallet;
+import org.example.stockmarketsimulator.model.Transactions;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -14,6 +19,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +45,12 @@ public class AssetPriceFetcher {
 
     @Autowired
     private AssetPriceHistoryRepository assetPriceHistoryRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private TransactionsRepository transactionsRepository;
 
     @Autowired
     public AssetPriceFetcher(AssetsRepository assetsRepository) {
@@ -72,8 +84,40 @@ public class AssetPriceFetcher {
         return prices;
     }
 
+    @Transactional
+    private void recalculateAllUsersProfit() {
+        List<User> users = userRepository.findAll();
+        for (User user : users) {
+            double profit = 0.0;
+            UserWallet wallet = user.getWallet();
+            if (wallet != null) {
+                List<Transactions> userTransactions = transactionsRepository.findByUser(user);
+                for (Map.Entry<Long, Double> entry : wallet.getAssets().entrySet()) {
+                    Long assetId = entry.getKey();
+                    Double amount = entry.getValue();
+                    Asset asset = assetsRepository.findById(assetId).orElse(null);
+                    if (asset == null) continue;
+
+                    double spent = userTransactions.stream()
+                        .filter(t -> t.getAsset().getId().equals(assetId) && t.getType() == Transactions.TransactionType.BUY)
+                        .mapToDouble(t -> t.getAmount() * t.getPrice()).sum()
+                        -
+                        userTransactions.stream()
+                        .filter(t -> t.getAsset().getId().equals(assetId) && t.getType() == Transactions.TransactionType.SELL)
+                        .mapToDouble(t -> t.getAmount() * t.getPrice()).sum();
+
+                    double currentValue = amount * asset.getPrice();
+                    profit += currentValue - spent;
+                }
+            }
+            user.setProfit(profit);
+            userRepository.save(user);
+        }
+    }
+
     @Scheduled(fixedDelay = 30000)
     @PostConstruct
+    @Transactional
     public void updateAssetPrices() {
         try {
             List<Asset> assets = assetsRepository.findAll();
@@ -99,6 +143,10 @@ public class AssetPriceFetcher {
                     logger.debug("Wysłano wiadomość do kolejki: {}", message);
                 }
             }
+
+            // Przelicz profit dla wszystkich użytkowników po aktualizacji cen
+            recalculateAllUsersProfit();
+
         } catch (Exception e) {
             logger.error("Błąd podczas aktualizacji cen aktywów: {}", e.getMessage());
         }

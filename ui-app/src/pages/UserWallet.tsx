@@ -106,6 +106,11 @@ function UserWallet() {
         fetchWalletDetails();
         fetchAvailableAssets();
         fetchAccountInfo();
+        // Odświeżaj profit i stan konta co 10 sekund
+        const interval = setInterval(() => {
+            fetchAccountInfo();
+        }, 10000);
+        return () => clearInterval(interval);
         // eslint-disable-next-line
     }, [userId]);
 
@@ -172,9 +177,9 @@ function UserWallet() {
         <div className="container">
             <h1>Portfel użytkownika {userId}</h1>
             <div>
-                <strong>Stan konta:</strong> {account.accountBalance} PLN
+                <strong>Stan konta:</strong> {account.accountBalance.toFixed(2)} PLN
                 <br />
-                <strong>Profit:</strong> {account.profit} PLN
+                <strong>Profit:</strong> {account.profit.toFixed(2)} PLN
             </div>
             <form onSubmit={handleAddFunds} style={{ margin: "16px 0" }}>
                 <input

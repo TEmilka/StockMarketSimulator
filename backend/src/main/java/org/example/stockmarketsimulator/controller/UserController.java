@@ -11,8 +11,11 @@ import org.example.stockmarketsimulator.exception.ResourceNotFoundException;
 import org.example.stockmarketsimulator.model.Asset;
 import org.example.stockmarketsimulator.model.User;
 import org.example.stockmarketsimulator.model.UserWallet;
+import org.example.stockmarketsimulator.model.Transactions;
+import org.example.stockmarketsimulator.model.Transactions.TransactionType;
 import org.example.stockmarketsimulator.repository.AssetsRepository;
 import org.example.stockmarketsimulator.repository.UserRepository;
+import org.example.stockmarketsimulator.repository.TransactionsRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +51,9 @@ public class UserController {
 
     @Autowired
     private AssetsRepository assetsRepository;
+
+    @Autowired
+    private TransactionsRepository transactionsRepository;
 
     private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -240,6 +246,39 @@ public class UserController {
         }
     }
 
+    // Pomocnicza metoda do przeliczania profitu użytkownika
+    private void recalculateProfit(User user) {
+        UserWallet wallet = user.getWallet();
+        if (wallet == null) {
+            user.setProfit(0.0);
+            userRepository.save(user);
+            return;
+        }
+        double profit = 0.0;
+        List<Transactions> userTransactions = transactionsRepository.findByUser(user);
+        // Dla każdego aktywa w portfelu
+        for (Map.Entry<Long, Double> entry : wallet.getAssets().entrySet()) {
+            Long assetId = entry.getKey();
+            Double amount = entry.getValue();
+            Asset asset = assetsRepository.findById(assetId).orElse(null);
+            if (asset == null) continue;
+
+            // Kwota wydana na zakup tej ilości aktywa (suma kwot kupna - suma kwot sprzedaży)
+            double spent = userTransactions.stream()
+                .filter(t -> t.getAsset().getId().equals(assetId) && t.getType() == TransactionType.BUY)
+                .mapToDouble(t -> t.getAmount() * t.getPrice()).sum()
+                -
+                userTransactions.stream()
+                .filter(t -> t.getAsset().getId().equals(assetId) && t.getType() == TransactionType.SELL)
+                .mapToDouble(t -> t.getAmount() * t.getPrice()).sum();
+
+            double currentValue = amount * asset.getPrice();
+            profit += currentValue - spent;
+        }
+        user.setProfit(profit);
+        userRepository.save(user);
+    }
+
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
@@ -330,6 +369,9 @@ public class UserController {
                 }
                 wallet.addAsset(assetId, amount);
                 user.setAccountBalance(user.getAccountBalance() - totalCost);
+                // Zapisz transakcję kupna
+                Transactions transaction = new Transactions(user, asset, amount, price, TransactionType.BUY);
+                transactionsRepository.save(transaction);
             } else if ("SELL".equalsIgnoreCase(type)) {
                 Double owned = wallet.getAssets().getOrDefault(assetId, 0.0);
                 if (owned < amount) {
@@ -338,9 +380,15 @@ public class UserController {
                 wallet.removeAsset(assetId, amount);
                 double totalGain = price * amount;
                 user.setAccountBalance(user.getAccountBalance() + totalGain);
+                // Zapisz transakcję sprzedaży
+                Transactions transaction = new Transactions(user, asset, amount, price, TransactionType.SELL);
+                transactionsRepository.save(transaction);
             } else {
                 return ResponseEntity.badRequest().body(Map.of("error", "Nieprawidłowy typ transakcji"));
             }
+
+            // Przelicz profit po transakcji
+            recalculateProfit(user);
 
             userRepository.save(user);
             return getUserWalletDetails(userId.toString());
