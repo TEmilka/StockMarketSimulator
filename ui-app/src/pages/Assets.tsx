@@ -303,7 +303,7 @@ function Assets() {
                                             display: true,
                                             title: { display: true, text: "Data" },
                                             ticks: {
-                                                callback: function(value, index, values) {
+                                                callback: function(value) {
                                                     // Skróć datę na osi X
                                                     // @ts-ignore
                                                     const label = this.getLabelForValue(value);
