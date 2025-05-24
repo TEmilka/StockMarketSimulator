@@ -22,6 +22,12 @@ public class User {
     @Column(nullable = false)
     private String role = "ROLE_USER"; // Domyślnie każdy nowy użytkownik ma rolę USER
 
+    @Column(nullable = false)
+    private double accountBalance = 0.0; // Stan konta użytkownika
+
+    @Column(nullable = false)
+    private double profit = 0.0; // Profit uzyskany przez użytkownika
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private UserWallet wallet;
@@ -33,6 +39,8 @@ public class User {
         this.email = email;
         this.password = password;
         this.wallet = new UserWallet(this);
+        this.accountBalance = 0.0;
+        this.profit = 0.0;
     }
 
     public Long getId() {
@@ -73,6 +81,22 @@ public class User {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public double getAccountBalance() {
+        return accountBalance;
+    }
+
+    public void setAccountBalance(double accountBalance) {
+        this.accountBalance = accountBalance;
+    }
+
+    public double getProfit() {
+        return profit;
+    }
+
+    public void setProfit(double profit) {
+        this.profit = profit;
     }
 
     public UserWallet getWallet() {

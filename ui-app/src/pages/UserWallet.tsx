@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
 
 interface Asset {
     id: string;
@@ -9,8 +8,13 @@ interface Asset {
     amount: number;
 }
 
+interface UserAccount {
+    accountBalance: number;
+    profit: number;
+}
+
 function UserWallet() {
-    const {userId} = useParams<{ userId: string }>();
+    const userId = localStorage.getItem("userId"); // <-- zawsze bierze ID zalogowanego użytkownika
     const [assets, setAssets] = useState<Asset[]>([]);
     const [error, setError] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(true);
@@ -18,6 +22,9 @@ function UserWallet() {
     const [newAssetId, setNewAssetId] = useState<string>("");
     const [newAssetAmount, setNewAssetAmount] = useState<string>("");
     const [availableAssets, setAvailableAssets] = useState<Asset[]>([]);
+
+    const [account, setAccount] = useState<UserAccount>({ accountBalance: 0, profit: 0 });
+    const [addFundsAmount, setAddFundsAmount] = useState<string>("");
 
     const fetchWalletDetails = async () => {
         try {
@@ -52,6 +59,28 @@ function UserWallet() {
         }
     };
 
+    const fetchAccountInfo = async () => {
+        try {
+            const accessToken = localStorage.getItem("accessToken");
+            if (!accessToken) return;
+            const response = await fetch(`http://localhost:8000/api/users/${userId}`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setAccount({
+                    accountBalance: data.accountBalance,
+                    profit: data.profit
+                });
+            }
+        } catch (err) {
+            // ignore
+        }
+    };
+
     const fetchAvailableAssets = async () => {
         try {
             const response = await fetch("http://localhost:8000/api/assets");
@@ -68,6 +97,8 @@ function UserWallet() {
     useEffect(() => {
         fetchWalletDetails();
         fetchAvailableAssets();
+        fetchAccountInfo();
+        // eslint-disable-next-line
     }, [userId]);
 
     const addAssetToWallet = async (assetId: string, amount: string) => {
@@ -105,6 +136,29 @@ function UserWallet() {
         }
     };
 
+    const handleAddFunds = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const accessToken = localStorage.getItem("accessToken");
+            if (!accessToken) throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
+            const response = await fetch(`http://localhost:8000/api/users/${userId}/add-funds`, {
+                method: "POST",
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ amount: parseFloat(addFundsAmount) })
+            });
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || "Nie udało się dodać środków");
+            }
+            setAddFundsAmount("");
+            fetchAccountInfo();
+        } catch (err) {
+            setError((err as Error).message);
+        }
+    };
 
     if (loading) return <p>Ładowanie portfela...</p>;
     if (error) return <p>{error}</p>;
@@ -112,6 +166,23 @@ function UserWallet() {
     return (
         <div className="container">
             <h1>Portfel użytkownika {userId}</h1>
+            <div>
+                <strong>Stan konta:</strong> {account.accountBalance} PLN
+                <br />
+                <strong>Profit:</strong> {account.profit} PLN
+            </div>
+            <form onSubmit={handleAddFunds} style={{ margin: "16px 0" }}>
+                <input
+                    type="number"
+                    placeholder="Kwota do dodania"
+                    value={addFundsAmount}
+                    onChange={e => setAddFundsAmount(e.target.value)}
+                    min="0.01"
+                    step="0.01"
+                    required
+                />
+                <button type="submit">Dodaj środki</button>
+            </form>
             <h2>Assety użytkownika</h2>
             {assets.length > 0 ? (
                 <ul>

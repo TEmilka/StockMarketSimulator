@@ -31,6 +31,7 @@ flowchart TD
 cd ui-app
 npm install
 npm run deploy
+npm run dev
 ```
 ### 🔧 Backend (Spring Boot)
 

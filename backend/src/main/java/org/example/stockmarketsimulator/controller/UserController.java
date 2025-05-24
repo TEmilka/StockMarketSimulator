@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -235,6 +237,67 @@ public class UserController {
             logger.error("Error adding asset to wallet", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to add asset: " + e.getMessage()));
+        }
+    }
+
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable Long id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String role = auth.getAuthorities().stream().findFirst().map(a -> a.getAuthority()).orElse("");
+        String userIdFromToken = auth.getAuthorities().stream()
+            .filter(a -> a.getAuthority().startsWith("ROLE_"))
+            .findFirst().map(a -> a.getAuthority()).orElse("");
+        // Pozwól adminowi na wszystko, userowi tylko na swoje dane
+        User user = userRepository.findById(id)
+                .orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Użytkownik nie został znaleziony", "status", 404));
+        }
+        if (!role.equals("ROLE_ADMIN") && !user.getUsername().equals(auth.getName())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Brak uprawnień do tego zasobu", "status", 403));
+        }
+        return ResponseEntity.ok(Map.of(
+                "id", user.getId(),
+                "username", user.getUsername(),
+                "email", user.getEmail(),
+                "accountBalance", user.getAccountBalance(),
+                "profit", user.getProfit()
+        ));
+    }
+
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PostMapping("/{id}/add-funds")
+    public ResponseEntity<?> addFunds(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String role = auth.getAuthorities().stream().findFirst().map(a -> a.getAuthority()).orElse("");
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Użytkownik nie został znaleziony", "status", 404));
+        }
+        if (!role.equals("ROLE_ADMIN") && !user.getUsername().equals(auth.getName())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Brak uprawnień do tego zasobu", "status", 403));
+        }
+        try {
+            double amount = Double.parseDouble(payload.get("amount").toString());
+            if (amount <= 0) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Kwota musi być większa od zera"));
+            }
+            user.setAccountBalance(user.getAccountBalance() + amount);
+            userRepository.save(user);
+            return ResponseEntity.ok(Map.of(
+                "accountBalance", user.getAccountBalance(),
+                "profit", user.getProfit()
+            ));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Nieprawidłowa kwota"));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage(), "status", 404));
         }
     }
 }

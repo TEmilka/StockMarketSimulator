@@ -66,6 +66,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/{userId}/wallet/details").authenticated()
                         .requestMatchers("/api/users/{userId}/wallet/add").authenticated()
                         .requestMatchers("/api/users/{userId}/wallet/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/users/{id}/add-funds**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/users/{id}").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/user-wallet/**").permitAll()
                         .requestMatchers("/add-asset").permitAll()
                         .requestMatchers("/add-user").permitAll()
