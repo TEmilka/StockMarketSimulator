@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.example.stockmarketsimulator.config.RabbitConfig;
 import org.example.stockmarketsimulator.model.Asset;
+import org.example.stockmarketsimulator.model.AssetPriceHistory;
 import org.example.stockmarketsimulator.repository.AssetsRepository;
+import org.example.stockmarketsimulator.repository.AssetPriceHistoryRepository;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -16,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +36,10 @@ public class AssetPriceFetcher {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private AssetPriceHistoryRepository assetPriceHistoryRepository;
+
     @Autowired
     public AssetPriceFetcher(AssetsRepository assetsRepository) {
         this.assetsRepository = assetsRepository;
@@ -76,6 +83,9 @@ public class AssetPriceFetcher {
                 Double newPrice = prices.get(asset.getSymbol());
                 if (newPrice != null) {
                     asset.setPrice(newPrice);
+                    // Dodaj wpis do historii
+                    AssetPriceHistory history = new AssetPriceHistory(asset, newPrice, LocalDateTime.now());
+                    assetPriceHistoryRepository.save(history);
                 }
             }
 

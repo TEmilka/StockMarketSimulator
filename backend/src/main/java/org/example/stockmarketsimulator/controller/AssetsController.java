@@ -9,7 +9,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.example.stockmarketsimulator.exception.BadRequestException;
 import org.example.stockmarketsimulator.exception.ResourceNotFoundException;
 import org.example.stockmarketsimulator.model.Asset;
+import org.example.stockmarketsimulator.model.AssetPriceHistory;
 import org.example.stockmarketsimulator.repository.AssetsRepository;
+import org.example.stockmarketsimulator.repository.AssetPriceHistoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +31,9 @@ public class AssetsController {
 
     @Autowired
     private AssetsRepository assetsRepository;
+
+    @Autowired
+    private AssetPriceHistoryRepository assetPriceHistoryRepository;
 
     @Operation(
             summary = "Pobierz wszystkie aktywa",
@@ -114,14 +119,20 @@ public class AssetsController {
 
     @GetMapping("/{id}/history")
     public ResponseEntity<?> getAssetHistory(@PathVariable Long id) {
-        // Przykład: zwróć przykładowe dane (własna implementacja: pobierz z bazy lub pliku)
-        // Wersja demo: 10 punktów z losowymi cenami
+        Optional<Asset> assetOpt = assetsRepository.findById(id);
+        if (assetOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Aktywo nie zostało znalezione", "status", 404));
+        }
+        Asset asset = assetOpt.get();
+        // Ostatnie 30 punktów, posortowane rosnąco po dacie
+        List<AssetPriceHistory> historyList = assetPriceHistoryRepository.findTop30ByAssetOrderByTimestampDesc(asset);
+        historyList.sort((a, b) -> a.getTimestamp().compareTo(b.getTimestamp()));
         List<Map<String, Object>> history = new ArrayList<>();
-        double base = 100 + (id % 10) * 10;
-        for (int i = 9; i >= 0; i--) {
+        for (AssetPriceHistory h : historyList) {
             Map<String, Object> point = new HashMap<>();
-            point.put("timestamp", LocalDateTime.now().minusDays(i).toString().substring(0, 10));
-            point.put("price", base + Math.sin(i) * 10 + Math.random() * 5);
+            point.put("timestamp", h.getTimestamp().toString());
+            point.put("price", h.getPrice());
             history.add(point);
         }
         return ResponseEntity.ok(history);
