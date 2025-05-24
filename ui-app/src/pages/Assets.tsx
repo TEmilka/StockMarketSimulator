@@ -1,6 +1,18 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { Line } from "react-chartjs-2";
+import {
+    Chart as ChartJS,
+    LineElement,
+    PointElement,
+    LinearScale,
+    CategoryScale,
+    Tooltip,
+    Legend,
+} from "chart.js";
 import './Assets.css';
+
+ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
 
 interface AssetForm {
     symbol: string;
@@ -15,12 +27,19 @@ interface Asset {
     price: number;
 }
 
+interface PriceHistoryPoint {
+    timestamp: string;
+    price: number;
+}
+
 function Assets() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [assets, setAssets] = useState<Asset[]>([]);
     const { register, handleSubmit, reset } = useForm<AssetForm>();
     const [isAdmin, setIsAdmin] = useState(false);
+    const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+    const [priceHistory, setPriceHistory] = useState<PriceHistoryPoint[]>([]);
 
     const fetchAssets = async () => {
         try {
@@ -37,6 +56,8 @@ function Assets() {
 
     useEffect(() => {
         fetchAssets();
+        const interval = setInterval(fetchAssets, 10000); // co 10 sekund
+        return () => clearInterval(interval);
     }, []);
 
     useEffect(() => {
@@ -110,7 +131,7 @@ function Assets() {
                 throw new Error("Sesja wygasła. Zaloguj się ponownie.");
             }
             if (response.status === 403) {
-                throw new Error("Brak uprawnień do usuwania aktywów.");
+                throw new Error("Brak uprawnień to usuwania aktywów.");
             }
             if (!response.ok) {
                 throw new Error("Nie udało się usunąć assetu");
@@ -121,6 +142,25 @@ function Assets() {
             setError((err as Error).message);
         }
     };
+
+    // Pobierz historię cen po wyborze aktywa
+    useEffect(() => {
+        if (!selectedAsset) {
+            setPriceHistory([]);
+            return;
+        }
+        const fetchHistory = async () => {
+            try {
+                const response = await fetch(`http://localhost:8000/api/assets/${selectedAsset.id}/history`);
+                if (!response.ok) throw new Error("Nie udało się pobrać historii cen");
+                const data = await response.json();
+                setPriceHistory(data);
+            } catch (err) {
+                setPriceHistory([]);
+            }
+        };
+        fetchHistory();
+    }, [selectedAsset]);
 
     return (
         <div className="container">
@@ -161,7 +201,12 @@ function Assets() {
                 {assets.length > 0 ? (
                     <ul>
                         {assets.map((asset: Asset, idx: number) => (
-                            <li key={idx} className="asset-item">
+                            <li
+                                key={idx}
+                                className={`asset-item${selectedAsset?.id === asset.id ? " selected" : ""}`}
+                                style={{ cursor: "pointer" }}
+                                onClick={() => setSelectedAsset(asset)}
+                            >
                                 {asset.name} ({asset.symbol}) - {asset.price} USD
                                 {isAdmin && (
                                     <button onClick={() => deleteAsset(asset.id)}>Usuń</button>
@@ -173,6 +218,45 @@ function Assets() {
                     <p>Brak assetów</p>
                 )}
             </div>
+
+            {selectedAsset && (
+                <div style={{ marginTop: 32 }}>
+                    <h2>Wykres ceny: {selectedAsset.name} ({selectedAsset.symbol})</h2>
+                    {priceHistory.length > 0 ? (
+                        <Line
+                            data={{
+                                labels: priceHistory.map(p => p.timestamp),
+                                datasets: [
+                                    {
+                                        label: "Cena",
+                                        data: priceHistory.map(p => p.price),
+                                        borderColor: "blue",
+                                        backgroundColor: "rgba(0,0,255,0.1)",
+                                        pointRadius: priceHistory.map((_, i) =>
+                                            i === priceHistory.length - 1 ? 6 : 2
+                                        ),
+                                        pointBackgroundColor: priceHistory.map((_, i) =>
+                                            i === priceHistory.length - 1 ? "red" : "blue"
+                                        ),
+                                    },
+                                ],
+                            }}
+                            options={{
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: { enabled: true },
+                                },
+                                scales: {
+                                    x: { display: true, title: { display: true, text: "Data" } },
+                                    y: { display: true, title: { display: true, text: "Cena (USD)" } },
+                                },
+                            }}
+                        />
+                    ) : (
+                        <p>Brak danych do wyświetlenia wykresu.</p>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

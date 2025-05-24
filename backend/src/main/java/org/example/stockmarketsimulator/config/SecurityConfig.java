@@ -68,6 +68,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/{userId}/wallet/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/users/{id}/add-funds**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/users/{id}").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/assets/{id}/history").permitAll()
                         .requestMatchers("/user-wallet/**").permitAll()
                         .requestMatchers("/add-asset").permitAll()
                         .requestMatchers("/add-user").permitAll()

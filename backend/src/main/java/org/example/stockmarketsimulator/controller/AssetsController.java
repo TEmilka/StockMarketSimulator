@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,5 +110,20 @@ public class AssetsController {
             response.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    @GetMapping("/{id}/history")
+    public ResponseEntity<?> getAssetHistory(@PathVariable Long id) {
+        // Przykład: zwróć przykładowe dane (własna implementacja: pobierz z bazy lub pliku)
+        // Wersja demo: 10 punktów z losowymi cenami
+        List<Map<String, Object>> history = new ArrayList<>();
+        double base = 100 + (id % 10) * 10;
+        for (int i = 9; i >= 0; i--) {
+            Map<String, Object> point = new HashMap<>();
+            point.put("timestamp", LocalDateTime.now().minusDays(i).toString().substring(0, 10));
+            point.put("price", base + Math.sin(i) * 10 + Math.random() * 5);
+            history.add(point);
+        }
+        return ResponseEntity.ok(history);
     }
 }
