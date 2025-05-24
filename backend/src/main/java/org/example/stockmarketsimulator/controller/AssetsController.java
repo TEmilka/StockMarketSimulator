@@ -93,13 +93,15 @@ public class AssetsController {
         try {
             Optional<Asset> assetOpt = assetsRepository.findById(id);
             if (assetOpt.isEmpty()) {
-                throw new ResourceNotFoundException("Aktywo o ID " + id + " nie zostało znalezione.");
+                // Return 404 with error structure
+                Map<String, Object> response = new HashMap<>();
+                response.put("error", "Aktywo o ID " + id + " nie zostało znalezione.");
+                response.put("status", 404);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
             assetsRepository.deleteById(id);
             return ResponseEntity.noContent().build();
-        } catch (ResourceNotFoundException e) {
-            throw e;
         } catch (Exception e) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "Wystąpił błąd podczas usuwania aktywa");

@@ -110,12 +110,16 @@ public class UserController {
     })
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Użytkownik o ID " + id + " nie został znaleziony"));
-
-        userRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        try {
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Użytkownik o ID " + id + " nie został znaleziony"));
+            userRepository.deleteById(id);
+            return ResponseEntity.noContent().build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage(), "status", 404));
+        }
     }
 
     @Operation(
@@ -135,12 +139,10 @@ public class UserController {
             Long userIdLong = Long.parseLong(userId);
             User user = userRepository.findById(userIdLong)
                     .orElseThrow(() -> new ResourceNotFoundException("Użytkownik nie został znaleziony"));
-
             UserWallet wallet = user.getWallet();
             if (wallet == null) {
                 return ResponseEntity.ok(Collections.emptyList());
             }
-
             List<Map<String, Object>> detailedAssets = new ArrayList<>();
             for (Map.Entry<Long, Double> entry : wallet.getAssets().entrySet()) {
                 Asset asset = assetsRepository.findById(entry.getKey())
@@ -154,6 +156,9 @@ public class UserController {
                 detailedAssets.add(assetDetails);
             }
             return ResponseEntity.ok(detailedAssets);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage(), "status", 404));
         } catch (NumberFormatException e) {
             throw new BadRequestException("Nieprawidłowy format ID użytkownika");
         }
@@ -174,7 +179,7 @@ public class UserController {
     public ResponseEntity<?> addAssetToWallet(@PathVariable Long userId, @RequestBody Map<String, Object> payload) {
         try {
             logger.debug("Received request to add asset. UserId: {}, Payload: {}", userId, payload);
-            
+
             if (!payload.containsKey("assetId") || !payload.containsKey("amount")) {
                 return ResponseEntity.badRequest()
                     .body(Map.of("error", "Missing required fields: assetId and amount"));
@@ -185,11 +190,11 @@ public class UserController {
 
             logger.debug("Looking for user with ID: {}", userId);
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+                    .orElseThrow(() -> new ResourceNotFoundException("Użytkownik o ID " + userId + " nie został znaleziony"));
 
             logger.debug("Looking for asset with ID: {}", assetId);
             Asset asset = assetsRepository.findById(assetId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Asset not found with ID: " + assetId));
+                    .orElseThrow(() -> new ResourceNotFoundException("Aktywo o ID " + assetId + " nie zostało znalezione"));
 
             logger.debug("Found asset: {}", asset.getSymbol());
 
@@ -208,9 +213,20 @@ public class UserController {
             return getUserWalletDetails(userId.toString());
 
         } catch (ResourceNotFoundException e) {
-            logger.error("Resource not found error: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+            String msg = e.getMessage();
+            int userIdIdx = msg != null && msg.contains("Aktywo o ID") ? msg.indexOf("Aktywo o ID") : -1;
+            if (msg != null && msg.startsWith("Użytkownik o ID")) {
+                // user not found
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", msg, "status", 404));
+            } else if (msg != null && msg.startsWith("Aktywo o ID")) {
+                // asset not found
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", msg, "status", 404));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Nie znaleziono zasobu", "status", 404));
+            }
         } catch (NumberFormatException e) {
             logger.error("Number format error: {}", e.getMessage());
             return ResponseEntity.badRequest()
