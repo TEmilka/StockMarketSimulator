@@ -19,12 +19,20 @@ function UserWallet() {
     const [error, setError] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(true);
 
-    const [newAssetId, setNewAssetId] = useState<string>("");
-    const [newAssetAmount, setNewAssetAmount] = useState<string>("");
     const [availableAssets, setAvailableAssets] = useState<Asset[]>([]);
 
     const [account, setAccount] = useState<UserAccount>({ accountBalance: 0, profit: 0 });
     const [addFundsAmount, setAddFundsAmount] = useState<string>("");
+
+    // Nowe stany do obsługi transakcji
+    const [tradeAssetId, setTradeAssetId] = useState<string>("");
+    const [tradeAmount, setTradeAmount] = useState<string>("");
+    const [tradeType, setTradeType] = useState<"BUY" | "SELL">("BUY");
+
+    // Wylicz koszt/zysk transakcji na podstawie wyboru
+    const selectedTradeAsset = availableAssets.find(a => a.id.toString() === tradeAssetId);
+    const parsedTradeAmount = parseFloat(tradeAmount) || 0;
+    const tradeValue = selectedTradeAsset ? parsedTradeAmount * selectedTradeAsset.price : 0;
 
     const fetchWalletDetails = async () => {
         try {
@@ -101,41 +109,6 @@ function UserWallet() {
         // eslint-disable-next-line
     }, [userId]);
 
-    const addAssetToWallet = async (assetId: string, amount: string) => {
-        try {
-            const accessToken = localStorage.getItem("accessToken");
-            if (!accessToken) {
-                throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
-            }
-
-            const response = await fetch(`http://localhost:8000/api/users/${userId}/wallet/add`, {
-                method: "POST",
-                headers: { 
-                    "Content-Type": "application/json",
-                    'Authorization': `Bearer ${accessToken}`
-                },
-                body: JSON.stringify({
-                    assetId: parseInt(assetId),
-                    amount: parseFloat(amount)
-                }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || "Nie udało się dodać aktywa");
-            }
-
-            const updatedWallet = await response.json();
-            setAssets(updatedWallet);
-            setNewAssetId("");
-            setNewAssetAmount("");
-            setError(""); // Clear any previous errors
-        } catch (err) {
-            setError((err as Error).message);
-            console.error("Error adding asset:", err);
-        }
-    };
-
     const handleAddFunds = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -155,6 +128,38 @@ function UserWallet() {
             }
             setAddFundsAmount("");
             fetchAccountInfo();
+        } catch (err) {
+            setError((err as Error).message);
+        }
+    };
+
+    // Nowa funkcja do kupna/sprzedaży aktywa
+    const handleTrade = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const accessToken = localStorage.getItem("accessToken");
+            if (!accessToken) throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
+            const response = await fetch(`http://localhost:8000/api/users/${userId}/wallet/trade`, {
+                method: "POST",
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    assetId: parseInt(tradeAssetId),
+                    amount: parseFloat(tradeAmount),
+                    type: tradeType
+                })
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || "Nie udało się wykonać transakcji");
+            }
+            setTradeAssetId("");
+            setTradeAmount("");
+            fetchWalletDetails();
+            fetchAccountInfo();
+            setError(""); // Clear any previous errors
         } catch (err) {
             setError((err as Error).message);
         }
@@ -196,16 +201,11 @@ function UserWallet() {
                 <p>Brak aktywów w portfelu.</p>
             )}
 
-            <h2>Dodaj aktywo</h2>
-            <form
-                onSubmit={(e) => {
-                    e.preventDefault();
-                    addAssetToWallet(newAssetId, newAssetAmount);
-                }}
-            >
+            <h2>Kup/Sprzedaj aktywo</h2>
+            <form onSubmit={handleTrade}>
                 <select
-                    value={newAssetId}
-                    onChange={(e) => setNewAssetId(e.target.value)}
+                    value={tradeAssetId}
+                    onChange={e => setTradeAssetId(e.target.value)}
                     required
                 >
                     <option value="">Wybierz aktywo</option>
@@ -218,14 +218,35 @@ function UserWallet() {
                 <input
                     type="number"
                     placeholder="Ilość"
-                    value={newAssetAmount}
-                    onChange={(e) => setNewAssetAmount(e.target.value)}
-                    required
+                    value={tradeAmount}
+                    onChange={e => setTradeAmount(e.target.value)}
                     min="0.01"
                     step="0.01"
+                    required
                 />
-                <button type="submit">Dodaj</button>
+                <select
+                    value={tradeType}
+                    onChange={e => setTradeType(e.target.value as "BUY" | "SELL")}
+                >
+                    <option value="BUY">Kup</option>
+                    <option value="SELL">Sprzedaj</option>
+                </select>
+                <button type="submit">Wykonaj transakcję</button>
             </form>
+            {/* Podgląd kosztu/zysku transakcji */}
+            {selectedTradeAsset && parsedTradeAmount > 0 && (
+                <div style={{ marginTop: 8, marginBottom: 16 }}>
+                    {tradeType === "BUY" ? (
+                        <span>
+                            Koszt zakupu: <strong>{tradeValue.toFixed(2)} USD</strong>
+                        </span>
+                    ) : (
+                        <span>
+                            Otrzymasz za sprzedaż: <strong>{tradeValue.toFixed(2)} USD</strong>
+                        </span>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

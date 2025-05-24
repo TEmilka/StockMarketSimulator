@@ -300,4 +300,56 @@ public class UserController {
                     .body(Map.of("error", e.getMessage(), "status", 404));
         }
     }
+
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PostMapping("/{userId}/wallet/trade")
+    public ResponseEntity<?> tradeAsset(
+            @PathVariable Long userId,
+            @RequestBody Map<String, Object> payload) {
+        try {
+            String type = payload.get("type").toString();
+            Long assetId = Long.valueOf(payload.get("assetId").toString());
+            Double amount = Double.valueOf(payload.get("amount").toString());
+
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Użytkownik o ID " + userId + " nie został znaleziony"));
+            Asset asset = assetsRepository.findById(assetId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Aktywo o ID " + assetId + " nie zostało znalezione"));
+
+            double price = asset.getPrice();
+            UserWallet wallet = user.getWallet();
+            if (wallet == null) {
+                wallet = new UserWallet(user);
+                user.setWallet(wallet);
+            }
+
+            if ("BUY".equalsIgnoreCase(type)) {
+                double totalCost = price * amount;
+                if (user.getAccountBalance() < totalCost) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "Brak środków na koncie"));
+                }
+                wallet.addAsset(assetId, amount);
+                user.setAccountBalance(user.getAccountBalance() - totalCost);
+            } else if ("SELL".equalsIgnoreCase(type)) {
+                Double owned = wallet.getAssets().getOrDefault(assetId, 0.0);
+                if (owned < amount) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "Nie posiadasz wystarczającej ilości aktywa"));
+                }
+                wallet.removeAsset(assetId, amount);
+                double totalGain = price * amount;
+                user.setAccountBalance(user.getAccountBalance() + totalGain);
+            } else {
+                return ResponseEntity.badRequest().body(Map.of("error", "Nieprawidłowy typ transakcji"));
+            }
+
+            userRepository.save(user);
+            return getUserWalletDetails(userId.toString());
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage(), "status", 404));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Błąd podczas realizacji transakcji: " + e.getMessage()));
+        }
+    }
 }
