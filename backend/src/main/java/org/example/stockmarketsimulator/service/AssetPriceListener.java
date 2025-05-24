@@ -22,11 +22,11 @@ public class AssetPriceListener {
             logger.info("Odebrano aktualizację: {} - ${}", asset.getSymbol(), asset.getPrice());
 
             if ("TSLA".equals(asset.getSymbol()) && asset.getPrice() > 800) {
-                logger.warn("⚠️ ALERT: TSLA przekroczyła $800! Aktualna cena: ${}", asset.getPrice());
+                logger.warn("ALERT: TSLA przekroczyła $800! Aktualna cena: ${}", asset.getPrice());
             }
 
             if ("BINANCE:BTCUSDT".equals(asset.getSymbol()) && asset.getPrice() < 50000) {
-                logger.warn("⚠️ ALERT: BTC spadł poniżej $50,000! Aktualna cena: ${}", asset.getPrice());
+                logger.warn("ALERT: BTC spadł poniżej $50,000! Aktualna cena: ${}", asset.getPrice());
             }
 
         } catch (Exception e) {
