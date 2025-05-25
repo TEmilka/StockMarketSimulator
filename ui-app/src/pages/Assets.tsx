@@ -281,13 +281,13 @@ function Assets() {
                                         {
                                             label: "Cena",
                                             data: priceHistory.map(p => p.price),
-                                            borderColor: "#2563eb",
-                                            backgroundColor: "rgba(37,99,235,0.08)",
+                                            borderColor: "#ff3c5f", // zmiana z niebieskiego na różowy/czerwony
+                                            backgroundColor: "rgba(255,60,95,0.08)",
                                             pointRadius: priceHistory.map((_, i) =>
                                                 i === priceHistory.length - 1 ? 7 : 3
                                             ),
                                             pointBackgroundColor: priceHistory.map((_, i) =>
-                                                i === priceHistory.length - 1 ? "#10b981" : "#2563eb"
+                                                i === priceHistory.length - 1 ? "#ef4444" : "#9340ff"
                                             ),
                                             tension: 0.3,
                                         },

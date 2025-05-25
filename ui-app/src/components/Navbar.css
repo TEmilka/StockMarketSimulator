@@ -9,6 +9,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    z-index: 1000; /* Dodaj to, aby navbar był zawsze na wierzchu */
 }
 
 .navbar-container {
@@ -41,7 +42,7 @@
 
 .navbar-button {
     background-color: white;
-    color: #007bff;
+    color: #9340ff;
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;

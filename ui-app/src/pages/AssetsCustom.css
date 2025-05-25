@@ -1,41 +1,47 @@
+/* --- GŁÓWNY KONTENER STRONY ASSETÓW --- */
 .assets-main-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f0f4f9 0%, #e0e7ef 100%);
-    padding: 2rem 0 3rem 0;
+    width: 100vw;
+    max-width: 100vw;
+    box-sizing: border-box;
+    background: linear-gradient(135deg, #101728 0%, #101728 100%);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    height: auto;
+    align-items: stretch;
+    padding: 80px 0 0 0; /* padding-top na navbar */
 }
 
+/* --- NAGŁÓWEK --- */
 .assets-header {
     text-align: center;
     margin-bottom: 2.5rem;
+    margin-top: 1rem;
 }
 
 .assets-title {
     font-size: 2.2rem;
     font-weight: 800;
-    color: #1e293b;
+    color: #fff;
     margin-bottom: 0.5rem;
     letter-spacing: 1px;
 }
 
 .assets-desc {
     font-size: 1.1rem;
-    color: #334155;
+    color: #e0e7ef;
     margin-bottom: 1.2rem;
     line-height: 1.5;
 }
 
 .assets-hint {
-    color: #10b981;
+    color: #ff3c5f;
     font-weight: 600;
     font-size: 1rem;
     margin-top: 0.5rem;
     display: block;
 }
 
+/* --- FORMULARZ ADMINA --- */
 .assets-form {
     margin-bottom: 2rem;
     display: flex;
@@ -52,7 +58,7 @@
 }
 
 .assets-btn {
-    background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
+    background: linear-gradient(90deg, #ff3c5f 0%, #9340ff 100%);
     color: white;
     font-weight: 600;
     border: none;
@@ -65,53 +71,74 @@
     background: #a3a3a3;
     cursor: not-allowed;
 }
+.assets-btn.selected {
+    background: linear-gradient(90deg, #9340ff 0%, #ff3c5f 100%);
+    color: #fff;
+}
 
 .assets-error {
     color: #f87171;
     margin-bottom: 1rem;
 }
 
+/* --- LISTA ASSETÓW NA CAŁĄ SZEROKOŚĆ --- */
 .assets-list-section {
-    width: 100%;
-    max-width: 600px;
+    width: 100vw;
+    max-width: 100vw;
     margin-bottom: 2.5rem;
+    background: linear-gradient(90deg, #181c2f 0%, #232946 100%);
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 32px 0 rgba(146, 64, 255, 0.10);
+    padding: 2.5rem 0 2.5rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .assets-list-title {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     font-weight: 700;
-    color: #2563eb;
+    color: #ff3c5f;
     margin-bottom: 0.5rem;
+    letter-spacing: 1px;
 }
 
 .assets-list-info {
     font-size: 1rem;
-    color: #64748b;
-    margin-bottom: 1rem;
+    color: #e0e7ef;
+    margin-bottom: 1.5rem;
 }
 
 .assets-list {
+    width: 90vw;
+    max-width: 1100px;
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    justify-content: flex-start;
 }
 
 .assets-list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex: 1 1 260px;
+    min-width: 260px;
+    max-width: 320px;
     background: #fff;
-    border-radius: 0.75rem;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.07);
-    padding: 1rem 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 12px rgba(146, 64, 255, 0.07);
+    padding: 1.2rem 1.5rem;
     cursor: pointer;
-    transition: box-shadow 0.2s, background 0.2s;
+    transition: box-shadow 0.2s, background 0.2s, border 0.2s;
     border: 2px solid transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    position: relative;
 }
 .assets-list-item.selected, .assets-list-item:hover {
-    border: 2px solid #10b981;
-    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.13);
-    background: #f0fdf4;
+    border: 2px solid #9340ff;
+    box-shadow: 0 4px 24px rgba(255, 60, 95, 0.13);
+    background: #f8f0fd;
 }
 
 .assets-list-main {
@@ -121,14 +148,14 @@
 }
 
 .assets-list-symbol {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     font-weight: 700;
-    color: #2563eb;
+    color: #9340ff;
 }
 
 .assets-list-name {
-    font-size: 1rem;
-    color: #334155;
+    font-size: 1.05rem;
+    color: #232946;
 }
 
 .assets-list-details {
@@ -138,9 +165,9 @@
 }
 
 .assets-list-price {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #10b981;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ff3c5f;
 }
 
 .assets-delete-btn {
@@ -164,6 +191,7 @@
     margin-top: 1rem;
 }
 
+/* --- WYKRES I SZCZEGÓŁY --- */
 .assets-chart-section {
     width: 100%;
     max-width: 700px;
@@ -180,7 +208,7 @@
 .assets-chart-title {
     font-size: 1.2rem;
     font-weight: 700;
-    color: #2563eb;
+    color: #9340ff;
     margin-bottom: 0.5rem;
 }
 
@@ -201,4 +229,26 @@
     color: #64748b;
     text-align: center;
     margin-top: 2rem;
+}
+
+/* --- RESPONSYWNOŚĆ --- */
+@media (max-width: 1300px) {
+    .assets-list {
+        width: 98vw;
+        max-width: 98vw;
+    }
+}
+@media (max-width: 900px) {
+    .assets-list {
+        flex-direction: column;
+        align-items: center;
+    }
+    .assets-list-item {
+        max-width: 98vw;
+        min-width: 0;
+        width: 98vw;
+    }
+    .assets-list-section {
+        padding: 1.2rem 0 1.2rem 0;
+    }
 }

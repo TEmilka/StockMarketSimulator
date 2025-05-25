@@ -81,14 +81,6 @@
     user-select: none;
 }
 
-.bullbear-vs {
-    font-size: 1.2rem;
-    color: #64748b;
-    margin: 0 0.5rem;
-    font-weight: 600;
-    letter-spacing: 0.1rem;
-}
-
 /* --- ŚRODKOWA KOLUMNA: sekcja "Co możesz zrobić?" + przycisk aktywów --- */
 .home-assets-section {
     display: flex;
@@ -176,8 +168,8 @@
 }
 
 .home-side-info-tip {
-    background: #f0fdf4;
-    color: #2563eb;
+    background: #f8f0fd;
+    color: #9340ff;
     border-radius: 0.5rem;
     padding: 0.7rem 1rem;
     font-size: 1rem;
