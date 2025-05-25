@@ -1,17 +1,22 @@
 package org.example.stockmarketsimulator.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.PostConstruct;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.example.stockmarketsimulator.config.RabbitConfig;
 import org.example.stockmarketsimulator.model.Asset;
 import org.example.stockmarketsimulator.model.AssetPriceHistory;
-import org.example.stockmarketsimulator.repository.AssetsRepository;
-import org.example.stockmarketsimulator.repository.AssetPriceHistoryRepository;
-import org.example.stockmarketsimulator.repository.UserRepository;
-import org.example.stockmarketsimulator.model.User;
-import org.example.stockmarketsimulator.repository.TransactionsRepository;
-import org.example.stockmarketsimulator.model.UserWallet;
 import org.example.stockmarketsimulator.model.Transactions;
+import org.example.stockmarketsimulator.model.User;
+import org.example.stockmarketsimulator.model.UserWallet;
+import org.example.stockmarketsimulator.repository.AssetPriceHistoryRepository;
+import org.example.stockmarketsimulator.repository.AssetsRepository;
+import org.example.stockmarketsimulator.repository.TransactionsRepository;
+import org.example.stockmarketsimulator.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -19,15 +24,13 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class AssetPriceFetcher {
@@ -62,6 +65,7 @@ public class AssetPriceFetcher {
 
         for (Asset asset : assets) {
             String symbol = asset.getSymbol(); // np. BINANCE:BTCUSDT, AAPL
+            //coinmarketcup //coingeco
             String url = "https://finnhub.io/api/v1/quote?symbol=" + symbol + "&token=" + API_TOKEN;
 
             try {
@@ -84,7 +88,7 @@ public class AssetPriceFetcher {
         return prices;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     private void recalculateAllUsersProfit() {
         List<User> users = userRepository.findAll();
         for (User user : users) {
@@ -117,7 +121,7 @@ public class AssetPriceFetcher {
 
     @Scheduled(fixedDelay = 30000)
     @PostConstruct
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateAssetPrices() {
         try {
             List<Asset> assets = assetsRepository.findAll();

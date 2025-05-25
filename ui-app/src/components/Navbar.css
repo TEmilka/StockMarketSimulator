@@ -3,7 +3,7 @@
     top: 0;
     left: 0;
     width: 100%;
-    background-color: #007bff;
+    background: linear-gradient(135deg, #9340ff 0%, #ff3c5f 100%);
     color: white;
     padding: 1rem;
     display: flex;
