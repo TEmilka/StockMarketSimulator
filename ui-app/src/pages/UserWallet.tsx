@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useParams } from "react-router-dom";
 import "./UserWalletCustom.css";
 
 interface Asset {
@@ -16,7 +17,10 @@ interface UserAccount {
 }
 
 function UserWallet() {
-    const userId = localStorage.getItem("userId");
+    // Najpierw sprawdź czy jest userId w URL, jeśli nie to z localStorage
+    const params = useParams<{ userId?: string }>();
+    const userId = params.userId ?? localStorage.getItem("userId");
+
     const [assets, setAssets] = useState<Asset[]>([]);
     const [error, setError] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(true);
