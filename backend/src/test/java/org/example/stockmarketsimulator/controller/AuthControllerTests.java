@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -42,7 +43,7 @@ public class AuthControllerTests {
     private UserRepository userRepository;
 
     @Mock
-    private PasswordEncoder passwordEncoder; // Mock PasswordEncoder
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private AuthController authController;
@@ -67,8 +68,9 @@ public class AuthControllerTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"JohnDoe\",\"password\":\"password123\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("mocked-jwt-token"))
-                .andExpect(jsonPath("$.userId").value("1")); // Ensure the ID matches the mocked user
+                .andExpect(cookie().exists("jwt"))
+                .andExpect(cookie().value("jwt", "mocked-jwt-token"))
+                .andExpect(jsonPath("$.userId").value("1"));
     }
 
     @Test
@@ -77,7 +79,7 @@ public class AuthControllerTests {
         UserRegistrationDTO userDTO = new UserRegistrationDTO("JohnDoe", "john.doe@example.com", "password123");
         when(userRepository.existsByEmail("john.doe@example.com")).thenReturn(false);
         when(userRepository.existsByUsername("JohnDoe")).thenReturn(false);
-        when(passwordEncoder.encode("password123")).thenReturn("encodedPassword123"); // Mock encoding
+        when(passwordEncoder.encode("password123")).thenReturn("encodedPassword123");
 
         // When & Then
         mockMvc.perform(post("/api/auth/register")
