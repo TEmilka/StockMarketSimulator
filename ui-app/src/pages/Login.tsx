@@ -57,47 +57,54 @@ function Login() {
     };
 
     return (
-        <div className="login-container">
-            <h1>{isRegistering ? "Rejestracja" : "Logowanie"}</h1>
-            <form onSubmit={isRegistering ? handleRegister : handleLogin} className="login-form">
-                <input
-                    type="text"
-                    placeholder="Nazwa użytkownika"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                />
-                {isRegistering && (
+        <div className="login-main-bg">
+            <div className="login-container">
+                <h1 className="login-title">{isRegistering ? "Rejestracja" : "Logowanie"}</h1>
+                <div className="login-subtitle">
+                    {isRegistering
+                        ? "Załóż nowe konto, aby korzystać z symulatora giełdy."
+                        : "Zaloguj się, aby zarządzać swoim portfelem inwestycyjnym."}
+                </div>
+                <form onSubmit={isRegistering ? handleRegister : handleLogin} className="login-form">
                     <input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        type="text"
+                        placeholder="Nazwa użytkownika"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
                         required
                     />
-                )}
-                <input
-                    type="password"
-                    placeholder="Hasło"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-                <button type="submit" className="login-button">
-                    {isRegistering ? "Zarejestruj się" : "Zaloguj się"}
-                </button>
-            </form>
-            {error && <p className="error">{error}</p>}
-            <p className="toggle-text">
-                {isRegistering ? "Masz już konto?" : "Nie masz konta?"}{" "}
-                <button
-                    type="button"
-                    className="toggle-button"
-                    onClick={() => setIsRegistering(!isRegistering)}
-                >
-                    {isRegistering ? "Zaloguj się" : "Zarejestruj się"}
-                </button>
-            </p>
+                    {isRegistering && (
+                        <input
+                            type="email"
+                            placeholder="Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    )}
+                    <input
+                        type="password"
+                        placeholder="Hasło"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                    <button type="submit" className="login-button">
+                        {isRegistering ? "Zarejestruj się" : "Zaloguj się"}
+                    </button>
+                </form>
+                {error && <p className="error">{error}</p>}
+                <p className="toggle-text">
+                    {isRegistering ? "Masz już konto?" : "Nie masz konta?"}{" "}
+                    <button
+                        type="button"
+                        className="toggle-button"
+                        onClick={() => setIsRegistering(!isRegistering)}
+                    >
+                        {isRegistering ? "Zaloguj się" : "Zarejestruj się"}
+                    </button>
+                </p>
+            </div>
         </div>
     );
 }
