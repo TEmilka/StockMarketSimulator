@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import "./UserWalletCustom.css";
 
 interface Asset {
@@ -17,7 +17,7 @@ interface UserAccount {
 }
 
 function UserWallet() {
-    // Najpierw sprawdź czy jest userId w URL, jeśli nie to z localStorage
+    const navigate = useNavigate();
     const params = useParams<{ userId?: string }>();
     const userId = params.userId ?? localStorage.getItem("userId");
 
@@ -42,15 +42,21 @@ function UserWallet() {
 
     const fetchWalletDetails = async () => {
         try {
-            const accessToken = localStorage.getItem("accessToken");
-            if (!accessToken) throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
             const response = await fetch(`http://localhost:8000/api/users/${userId}/wallet/details`, {
+                credentials: 'include',
                 headers: {
-                    'Authorization': `Bearer ${accessToken}`,
                     'Content-Type': 'application/json'
                 }
             });
-            if (!response.ok) throw new Error("Nie udało się pobrać portfela");
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    navigate('/login');
+                    return;
+                }
+                throw new Error('Failed to fetch wallet details');
+            }
+
             const data = await response.json();
             setAssets(data);
         } catch (err) {
@@ -62,22 +68,27 @@ function UserWallet() {
 
     const fetchAccountInfo = async () => {
         try {
-            const accessToken = localStorage.getItem("accessToken");
-            if (!accessToken) return;
             const response = await fetch(`http://localhost:8000/api/users/${userId}`, {
+                credentials: 'include',
                 headers: {
-                    'Authorization': `Bearer ${accessToken}`,
                     'Content-Type': 'application/json'
                 }
             });
-            if (response.ok) {
-                const data = await response.json();
-                setAccount({
-                    accountBalance: data.accountBalance,
-                    profit: data.profit,
-                    username: data.username
-                });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    navigate('/login');
+                    return;
+                }
+                throw new Error('Failed to fetch user details');
             }
+
+            const data = await response.json();
+            setAccount({
+                accountBalance: data.accountBalance,
+                profit: data.profit,
+                username: data.username
+            });
         } catch (err) {
             // ignore
         }
@@ -104,13 +115,10 @@ function UserWallet() {
         return () => clearInterval(interval);
     }, [userId]);
 
-    // Scroll to top with offset for navbar
     useEffect(() => {
         if (walletLayoutRef.current) {
-            // Załóżmy, że navbar ma wysokość 64px (dostosuj jeśli inna)
             const navbarHeight = 64;
             walletLayoutRef.current.scrollTo({ top: 0 });
-            // Jeśli strona jest przewijana (window), przewiń także okno
             if (window.scrollY < navbarHeight) {
                 window.scrollTo({ top: 0 });
             }
@@ -120,22 +128,29 @@ function UserWallet() {
     const handleAddFunds = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const accessToken = localStorage.getItem("accessToken");
-            if (!accessToken) throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
             const response = await fetch(`http://localhost:8000/api/users/${userId}/add-funds`, {
                 method: "POST",
+                credentials: 'include',
                 headers: {
-                    'Authorization': `Bearer ${accessToken}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ amount: parseFloat(addFundsAmount) })
             });
+
             if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || "Nie udało się dodać środków");
+                if (response.status === 401) {
+                    navigate('/login');
+                    return;
+                }
+                throw new Error('Failed to add funds');
             }
+
+            const data = await response.json();
+            setAccount({
+                ...account,
+                accountBalance: data.accountBalance
+            });
             setAddFundsAmount("");
-            fetchAccountInfo();
         } catch (err) {
             setError((err as Error).message);
         }
@@ -144,12 +159,10 @@ function UserWallet() {
     const handleTrade = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const accessToken = localStorage.getItem("accessToken");
-            if (!accessToken) throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
             const response = await fetch(`http://localhost:8000/api/users/${userId}/wallet/trade`, {
                 method: "POST",
+                credentials: 'include',
                 headers: {
-                    'Authorization': `Bearer ${accessToken}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -158,10 +171,16 @@ function UserWallet() {
                     type: tradeType
                 })
             });
-            const data = await response.json();
+
             if (!response.ok) {
+                if (response.status === 401) {
+                    navigate('/login');
+                    return;
+                }
+                const data = await response.json();
                 throw new Error(data.error || "Nie udało się wykonać transakcji");
             }
+
             setTradeAssetId("");
             setTradeAmount("");
             fetchWalletDetails();

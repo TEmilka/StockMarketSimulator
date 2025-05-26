@@ -8,7 +8,6 @@ function Home() {
         <div className="home-main-container">
             <div className="home-content-wrapper">
                 <div className="home-header">
-                    {/* Usuń ikony byka i niedźwiedzia */}
                     <h1 className="home-title">Stock Market Simulator</h1>
                     <p className="home-subtitle">
                         Symulator giełdy, w którym możesz kupować i sprzedawać aktywa, śledzić ich ceny w czasie rzeczywistym oraz zarządzać swoim portfelem inwestycyjnym.<br />
