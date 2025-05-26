@@ -177,13 +177,8 @@ function UserWallet() {
 
     return (
         <div
-            className="wallet-layout"
+            className="wallet-layout wallet-main-container"
             ref={walletLayoutRef}
-            style={{
-                overflowY: "auto",
-                maxHeight: "100vh",
-                paddingTop: "64px" // Dodaj padding, żeby nie zasłaniał navbar
-            }}
         >
             <aside className="wallet-sidebar">
                 <div className="wallet-user">

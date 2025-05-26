@@ -1,33 +1,57 @@
+body {
+    overflow-x: hidden;
+}
+/* --- GŁÓWNY KONTENER STRONY --- */
+.wallet-main-container {
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100vw;
+    max-width: 100vw;
+    padding-top: 8rem;
+    background: linear-gradient(135deg, #101728 0%, #101728 100%);
+    color: #e0e7ef;
+}
+
+/* --- LAYOUT STRONY --- */
 .wallet-layout {
     display: flex;
     min-height: 100vh;
-    background: linear-gradient(135deg, #f0f4f9 0%, #e0e7ef 100%);
+    width: 100vw;
+    max-width: 100vw;
+    box-sizing: border-box;
+    background: linear-gradient(135deg, #101728 0%, #101728 100%);
+    color: #e0e7ef;
+    padding-top: 80px; /* Odstęp od navbaru */
 }
 
+/* --- SIDEBAR --- */
 .wallet-sidebar {
     width: 270px;
-    background: #fff;
-    border-right: 1px solid #e5e7eb;
+    background: #181c2f; /* Ciemniejszy odcień tła */
+    border-right: 1px solid #232946;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 2.5rem 1.2rem 1.2rem 1.2rem;
-    box-shadow: 2px 0 16px rgba(16, 185, 129, 0.04);
+    box-shadow: 2px 0 16px rgba(146, 64, 255, 0.04);
     min-height: 100vh;
 }
 
+/* --- INFORMACJE O UŻYTKOWNIKU --- */
 .wallet-user {
+    padding: 6rem 2.5rem 2rem 2.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 2.5rem;
 }
 
+/* --- AVATAR UŻYTKOWNIKA --- */
 .wallet-avatar {
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+    background: linear-gradient(135deg, #ff3c5f 0%, #9340ff 100%);
     color: #fff;
     font-size: 2.2rem;
     font-weight: 700;
@@ -35,15 +59,17 @@
     align-items: center;
     justify-content: center;
     margin-bottom: 0.7rem;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.09);
+    box-shadow: 0 2px 8px rgba(146, 64, 255, 0.09);
 }
 
+/* --- NAZWA UŻYTKOWNIKA --- */
 .wallet-username {
     font-size: 1.15rem;
     font-weight: 600;
-    color: #2563eb;
+    color: #ff3c5f;
 }
 
+/* --- STAN KONTA I PROFIT --- */
 .wallet-balance, .wallet-profit {
     margin-bottom: 1.2rem;
     text-align: center;
@@ -54,6 +80,7 @@
     font-size: 1rem;
 }
 
+/* --- WARTOŚĆ SALDA KONTA --- */
 .wallet-balance-value {
     font-size: 1.35rem;
     font-weight: 700;
@@ -61,6 +88,7 @@
     margin-top: 0.2rem;
 }
 
+/* --- WARTOŚĆ PROFITU --- */
 .wallet-profit-value {
     font-size: 1.2rem;
     font-weight: 700;
@@ -73,22 +101,27 @@
     color: #ef4444;
 }
 
+/* --- FORMULARZ DODAWANIA ŚRODKÓW --- */
 .wallet-addfunds-form {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 2rem;
 }
 
+/* --- INPUT DODAWANIA ŚRODKÓW --- */
 .wallet-addfunds-input {
     padding: 0.4rem 0.7rem;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #4b5563;
     border-radius: 0.5rem;
     font-size: 1rem;
     width: 100px;
+    background-color: #1f2937;
+    color: #e0e7ef;
 }
 
+/* --- PRZYCISK DODAWANIA ŚRODKÓW --- */
 .wallet-addfunds-btn {
-    background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
+    background: linear-gradient(90deg, #ff3c5f 0%, #9340ff 100%);
     color: #fff;
     border: none;
     border-radius: 0.5rem;
@@ -99,25 +132,28 @@
     transition: background 0.2s;
 }
 .wallet-addfunds-btn:hover {
-    background: linear-gradient(90deg, #059669 0%, #2563eb 100%);
+    background: linear-gradient(90deg, #9340ff 0%, #ff3c5f 100%);
 }
 
+/* --- GŁÓWNA SEKCJA --- */
 .wallet-main {
     flex: 1;
-    padding: 2.5rem 2.5rem 2rem 2.5rem;
+    padding: 6rem 2.5rem 2rem 2.5rem; /* Zwiększono padding-top */
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     min-width: 0;
 }
 
+/* --- TYTUŁ AKTYWÓW --- */
 .wallet-assets-title {
     font-size: 1.4rem;
     font-weight: 700;
-    color: #2563eb;
+    color: #ff3c5f;
     margin-bottom: 1.2rem;
 }
 
+/* --- LISTA AKTYWÓW --- */
 .wallet-assets-list {
     width: 100%;
     display: flex;
@@ -126,78 +162,89 @@
     margin-bottom: 2.2rem;
 }
 
+/* --- POJEDYNCZY ELEMENT AKTYWA --- */
 .wallet-asset-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #fff;
+    background: #1f2937;
     border-radius: 0.7rem;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.07);
+    box-shadow: 0 2px 8px rgba(146, 64, 255, 0.07);
     padding: 1rem 1.5rem;
-    border: 2px solid #e0e7ef;
+    border: 2px solid #4b5563;
     transition: border 0.2s, box-shadow 0.2s;
 }
 .wallet-asset-item:hover {
-    border: 2px solid #10b981;
-    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.13);
+    border: 2px solid #9340ff;
+    box-shadow: 0 4px 16px rgba(146, 64, 255, 0.13);
 }
 
+/* --- GŁÓWNE INFORMACJE O AKTYWIE --- */
 .wallet-asset-main {
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
 }
 
+/* --- SYMBOL AKTYWA --- */
 .wallet-asset-symbol {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #2563eb;
+    color: #9340ff;
 }
 
+/* --- NAZWA AKTYWA --- */
 .wallet-asset-name {
     font-size: 1rem;
-    color: #334155;
+    color: #e0e7ef;
 }
 
+/* --- SZCZEGÓŁY AKTYWA --- */
 .wallet-asset-details {
     display: flex;
     align-items: center;
     gap: 1.2rem;
 }
 
+/* --- ILOŚĆ AKTYWA --- */
 .wallet-asset-amount {
     font-size: 1.1rem;
     font-weight: 600;
     color: #10b981;
 }
 
+/* --- CENA AKTYWA --- */
 .wallet-asset-price {
     font-size: 1.05rem;
     color: #64748b;
 }
 
+/* --- INFORMACJA O BRAKU AKTYWÓW --- */
 .wallet-assets-empty {
     color: #64748b;
     margin-bottom: 2rem;
 }
 
+/* --- SEKCJA TRANSAKCJI --- */
 .wallet-trade-section {
     width: 100%;
-    background: #f0fdf4;
+    background: #181c2f;
     border-radius: 0.7rem;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.07);
+    box-shadow: 0 2px 8px rgba(146, 64, 255, 0.07);
     padding: 1.5rem 2rem;
     margin-top: 1.5rem;
 }
 
+/* --- TYTUŁ SEKCJI TRANSAKCJI --- */
 .wallet-trade-section h3 {
     margin-top: 0;
-    color: #10b981;
+    color: #ff3c5f;
     font-size: 1.1rem;
     font-weight: 700;
     margin-bottom: 1rem;
 }
 
+/* --- FORMULARZ TRANSAKCJI --- */
 .wallet-trade-form {
     display: flex;
     gap: 0.7rem;
@@ -206,15 +253,19 @@
     margin-bottom: 0.7rem;
 }
 
+/* --- ELEMENTY FORMULARZA TRANSAKCJI --- */
 .wallet-trade-select, .wallet-trade-input, .wallet-trade-type {
     padding: 0.4rem 0.7rem;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #4b5563;
     border-radius: 0.5rem;
     font-size: 1rem;
+    background-color: #1f2937;
+    color: #e0e7ef;
 }
 
+/* --- PRZYCISK TRANSAKCJI --- */
 .wallet-trade-btn {
-    background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
+    background: linear-gradient(90deg, #ff3c5f 0%, #9340ff 100%);
     color: #fff;
     border: none;
     border-radius: 0.5rem;
@@ -225,21 +276,23 @@
     transition: background 0.2s;
 }
 .wallet-trade-btn:hover {
-    background: linear-gradient(90deg, #059669 0%, #2563eb 100%);
+    background: linear-gradient(90deg, #9340ff 0%, #ff3c5f 100%);
 }
 
+/* --- PODGLĄD TRANSAKCJI --- */
 .wallet-trade-preview {
     margin-top: 0.5rem;
-    color: #2563eb;
+    color: #9340ff;
     font-size: 1.05rem;
 }
 
+/* --- WSKAZÓWKA --- */
 .wallet-tip {
     margin-top: 2.5rem;
     color: #64748b;
     font-size: 1.05rem;
-    background: #e0e7ef;
+    background: #232946;
     border-radius: 0.5rem;
     padding: 0.8rem 1.2rem;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.04);
+    box-shadow: 0 2px 8px rgba(146, 64, 255, 0.04);
 }
