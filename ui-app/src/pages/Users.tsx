@@ -107,10 +107,12 @@ function Users() {
 
     return (
         <div className="admin-users-container">
-            <h1 className="admin-users-title">Panel administratora – Zarządzanie użytkownikami</h1>
-            <p className="admin-users-desc">
-                Tutaj możesz przeglądać, dodawać i usuwać użytkowników oraz podejrzeć ich portfele inwestycyjne.
-            </p>
+            <div className="admin-users-header">
+                <h1 className="admin-users-title">Panel administratora – Zarządzanie użytkownikami</h1>
+                <p className="admin-users-desc">
+                    Tutaj możesz przeglądać, dodawać i usuwać użytkowników oraz podejrzeć ich portfele inwestycyjne.
+                </p>
+            </div>
             {!isAdmin ? (
                 <div className="error-message">
                     Nie masz uprawnień do wyświetlania listy użytkowników.

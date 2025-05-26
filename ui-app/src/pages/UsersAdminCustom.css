@@ -1,16 +1,27 @@
+/* --- GŁÓWNY KONTENER STRONY --- */
 .admin-users-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f0f4f9 0%, #e0e7ef 100%);
-    padding: 2.5rem 0 3rem 0;
+    width: 100vw;
+    max-width: 100vw;
+    box-sizing: border-box;
+    background: linear-gradient(135deg, #101728 0%, #101728 100%);
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
+    padding: 80px 0 0 0;
+}
+
+/* --- NAGŁÓWEK --- */
+.admin-users-header {
+    text-align: center;
+    margin: 2rem 0 3rem 0;
+    padding: 0 1rem;
 }
 
 .admin-users-title {
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 800;
-    color: #1e293b;
+    color: #fff;
     margin-bottom: 0.5rem;
     letter-spacing: 1px;
     text-align: center;
@@ -18,87 +29,111 @@
 
 .admin-users-desc {
     font-size: 1.1rem;
-    color: #334155;
-    margin-bottom: 2.2rem;
+    color: #e0e7ef;
+    line-height: 1.5;
     text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
 }
 
+/* --- FORMULARZ DODAWANIA UŻYTKOWNIKA --- */
 .admin-users-form {
+    width: 90vw;
+    max-width: 1100px;
+    margin: 0 auto 2rem auto;
+    background: linear-gradient(90deg, #181c2f 0%, #232946 100%);
+    border-radius: 1rem;
+    padding: 2rem;
     display: flex;
-    gap: 0.7rem;
-    margin-bottom: 2rem;
+    gap: 1rem;
     flex-wrap: wrap;
     justify-content: center;
+    box-shadow: 0 4px 32px rgba(146, 64, 255, 0.1);
 }
 
 .admin-users-input {
-    border: 1px solid #ccc;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    min-width: 140px;
+    padding: 0.8rem 1.2rem;
+    border: 2px solid #4b5563;
+    border-radius: 0.7rem;
     font-size: 1rem;
+    background: #1f2937;
+    color: #e0e7ef;
+    min-width: 200px;
+    transition: border-color 0.2s;
+}
+
+.admin-users-input:focus {
+    border-color: #9340ff;
+    outline: none;
 }
 
 .admin-users-btn {
-    background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
+    background: linear-gradient(90deg, #ff3c5f 0%, #9340ff 100%);
     color: white;
-    font-weight: 600;
+    font-weight: 700;
     border: none;
-    border-radius: 1rem;
-    padding: 0.5rem 1.5rem;
+    border-radius: 0.7rem;
+    padding: 0.8rem 2rem;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: transform 0.2s;
 }
+
+.admin-users-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
 .admin-users-btn:disabled {
-    background: #a3a3a3;
+    background: #4b5563;
     cursor: not-allowed;
 }
 
-.admin-users-error {
-    color: #f87171;
-    margin-bottom: 1rem;
-}
-
+/* --- LISTA UŻYTKOWNIKÓW --- */
 .admin-users-list-section {
-    width: 100%;
-    max-width: 600px;
-    margin-bottom: 2.5rem;
+    width: 90vw;
+    max-width: 1100px;
+    margin: 0 auto 3rem auto;
+    background: linear-gradient(90deg, #181c2f 0%, #232946 100%);
+    border-radius: 1.5rem;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 4px 32px rgba(146, 64, 255, 0.1);
 }
 
 .admin-users-list-title {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     font-weight: 700;
-    color: #2563eb;
-    margin-bottom: 0.5rem;
+    color: #ff3c5f;
+    margin-bottom: 1.5rem;
+    text-align: center;
 }
 
 .admin-users-list {
     display: flex;
     flex-direction: column;
-    gap: 0.7rem;
+    gap: 1rem;
 }
 
 .admin-user-item {
+    background: #1f2937;
+    border-radius: 1rem;
+    padding: 1.2rem 1.5rem;
+    border: 2px solid #4b5563;
+    transition: all 0.2s;
     display: flex;
     align-items: center;
-    background: #fff;
-    border-radius: 0.75rem;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.07);
-    padding: 1rem 1.5rem;
-    border: 2px solid #e0e7ef;
-    transition: border 0.2s, box-shadow 0.2s;
     gap: 1.2rem;
 }
+
 .admin-user-item:hover {
-    border: 2px solid #10b981;
-    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.13);
+    border-color: #9340ff;
+    box-shadow: 0 4px 16px rgba(255, 60, 95, 0.13);
+    transform: translateY(-2px);
 }
 
 .admin-user-avatar {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+    background: linear-gradient(135deg, #ff3c5f 0%, #9340ff 100%);
     color: #fff;
     font-size: 1.5rem;
     font-weight: 700;
@@ -108,62 +143,90 @@
 }
 
 .admin-user-info {
-    display: flex;
-    flex-direction: column;
     flex: 1;
-    gap: 0.2rem;
 }
 
 .admin-user-name {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #2563eb;
+    color: #e0e7ef;
+    margin-bottom: 0.2rem;
 }
 
 .admin-user-email {
     font-size: 1rem;
-    color: #334155;
+    color: #9340ff;
 }
 
 .admin-user-actions {
     display: flex;
-    gap: 0.7rem;
+    gap: 0.8rem;
 }
 
 .admin-user-wallet-btn {
-    background: #e0e7ef;
-    color: #2563eb;
+    background: #2d3748;
+    color: #10b981;
     border: none;
-    border-radius: 1rem;
-    padding: 0.3rem 1.2rem;
-    font-size: 1rem;
+    border-radius: 0.7rem;
+    padding: 0.6rem 1.2rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    transition: all 0.2s;
 }
+
 .admin-user-wallet-btn:hover {
-    background: #c7f9e5;
-    color: #10b981;
+    background: #374151;
+    transform: translateY(-2px);
 }
 
 .admin-user-delete-btn {
-    background: #fee2e2;
-    color: #dc2626;
+    background: #3B1A1A;
+    color: #ef4444;
     border: none;
-    border-radius: 1rem;
-    padding: 0.3rem 1.2rem;
-    font-size: 1rem;
+    border-radius: 0.7rem;
+    padding: 0.6rem 1.2rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    transition: all 0.2s;
 }
+
 .admin-user-delete-btn:hover {
-    background: #fecaca;
-    color: #b91c1c;
+    background: #4B2222;
+    transform: translateY(-2px);
 }
 
 .admin-users-empty {
     color: #64748b;
     text-align: center;
-    margin-top: 1rem;
+    font-size: 1.1rem;
+    padding: 2rem;
+}
+
+.admin-users-error {
+    color: #ef4444;
+    text-align: center;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #3B1A1A;
+    border-radius: 0.7rem;
+}
+
+/* --- RESPONSYWNOŚĆ --- */
+@media (max-width: 768px) {
+    .admin-users-form,
+    .admin-users-list-section {
+        width: 95vw;
+        padding: 1.5rem 1rem;
+    }
+
+    .admin-user-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .admin-user-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
 }
