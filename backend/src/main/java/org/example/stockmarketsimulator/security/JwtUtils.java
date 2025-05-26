@@ -23,6 +23,7 @@ public class JwtUtils {
     private static final String SECRET_KEY = "TwojeSuperTajneHasloDoJWT_1234567890"; // powinno być min 256 bitów!
 
     private static final long EXPIRATION_TIME = 86400000; // 1 dzień w ms
+    private static final long REFRESH_EXPIRATION_TIME = 604800000; // 7 dni w ms
 
     private final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
 
@@ -76,6 +77,24 @@ public class JwtUtils {
             return claims.get("userId", String.class);
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    public String generateRefreshToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRATION_TIME))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public boolean validateRefreshToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
         }
     }
 }

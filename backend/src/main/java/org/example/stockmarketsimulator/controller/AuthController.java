@@ -29,6 +29,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
@@ -133,5 +134,44 @@ public class AuthController {
         response.addCookie(jwtCookie);
 
         return ResponseEntity.ok().body(Map.of("message", "Logged out successfully"));
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+        // Pobierz refresh token z ciasteczka
+        String refreshToken = null;
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("refresh_token".equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (refreshToken != null && jwtUtils.validateRefreshToken(refreshToken)) {
+            String username = jwtUtils.extractUsername(refreshToken);
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new BadRequestException("User not found"));
+
+            // Generuj nowy access token
+            String newToken = jwtUtils.generateToken(username);
+            
+            // Ustaw nowy access token w ciasteczku
+            Cookie jwtCookie = new Cookie("jwt", newToken);
+            jwtCookie.setHttpOnly(true);
+            jwtCookie.setSecure(true);
+            jwtCookie.setPath("/");
+            jwtCookie.setMaxAge(86400);
+            response.addCookie(jwtCookie);
+
+            return ResponseEntity.ok(Map.of(
+                "userId", user.getId().toString(),
+                "role", user.getRole()
+            ));
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "Invalid refresh token"));
     }
 }
