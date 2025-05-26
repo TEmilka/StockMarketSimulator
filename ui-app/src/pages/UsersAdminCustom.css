@@ -211,6 +211,91 @@
     border-radius: 0.7rem;
 }
 
+/* --- SEKCJA TRANSAKCJI --- */
+.admin-users-transactions-section {
+    width: 90vw;
+    max-width: 1100px;
+    margin: 2rem auto 3rem auto;
+    background: linear-gradient(90deg, #181c2f 0%, #232946 100%);
+    border-radius: 1.5rem;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 4px 32px rgba(146, 64, 255, 0.1);
+}
+
+.admin-users-transactions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.admin-user-transaction {
+    background: #1f2937;
+    border-radius: 1rem;
+    padding: 1.2rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border: 2px solid #4b5563;
+    transition: all 0.2s;
+}
+
+.admin-user-transaction:hover {
+    border-color: #9340ff;
+    transform: translateY(-2px);
+}
+
+.transaction-type {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    min-width: 100px;
+    text-align: center;
+}
+
+.transaction-type[data-type="BUY"] {
+    background: #132f21;
+    color: #10b981;
+}
+
+.transaction-type[data-type="SELL"] {
+    background: #3B1A1A;
+    color: #ef4444;
+}
+
+.transaction-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.transaction-asset {
+    font-size: 1.1rem;
+    color: #9340ff;
+    font-weight: 600;
+}
+
+.transaction-amount {
+    color: #e0e7ef;
+}
+
+.transaction-total {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.transaction-timestamp {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.admin-users-loading {
+    color: #64748b;
+    text-align: center;
+    padding: 2rem;
+}
+
 /* --- RESPONSYWNOŚĆ --- */
 @media (max-width: 768px) {
     .admin-users-form,
@@ -225,6 +310,7 @@
         gap: 1rem;
     }
 
+}
     .admin-user-actions {
         width: 100%;
         justify-content: flex-end;

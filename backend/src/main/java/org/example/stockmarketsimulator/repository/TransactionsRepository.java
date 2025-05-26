@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface TransactionsRepository extends JpaRepository<Transactions, Long> {
-    List<Transactions> findByUser(User user);
+    List<Transactions> findByUserOrderByTimestampDesc(User user);
 }

@@ -4,50 +4,30 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "transactions")
 public class Transactions {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "asset_id", nullable = false)
     private Asset asset;
 
-    @Column(nullable = false)
-    private double amount;
-
-    @Column(nullable = false)
-    private double price;
-
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private TransactionType type;
 
-    @Column(nullable = false)
+    private double amount;
+    private double price;
     private LocalDateTime timestamp;
 
     public enum TransactionType {
         BUY, SELL
     }
 
-    public Transactions() {
-        this.timestamp = LocalDateTime.now();
-    }
-
-    public Transactions(User user, Asset asset, double amount, double price, TransactionType type) {
-        this.user = user;
-        this.asset = asset;
-        this.amount = amount;
-        this.price = price;
-        this.type = type;
-        this.timestamp = LocalDateTime.now();
-    }
+    // Bezargumentowy konstruktor wymagany przez JPA
+    public Transactions() {}
 
     // Gettery i settery
     public Long getId() {
@@ -74,6 +54,14 @@ public class Transactions {
         this.asset = asset;
     }
 
+    public TransactionType getType() {
+        return type;
+    }
+
+    public void setType(TransactionType type) {
+        this.type = type;
+    }
+
     public double getAmount() {
         return amount;
     }
@@ -88,14 +76,6 @@ public class Transactions {
 
     public void setPrice(double price) {
         this.price = price;
-    }
-
-    public TransactionType getType() {
-        return type;
-    }
-
-    public void setType(TransactionType type) {
-        this.type = type;
     }
 
     public LocalDateTime getTimestamp() {

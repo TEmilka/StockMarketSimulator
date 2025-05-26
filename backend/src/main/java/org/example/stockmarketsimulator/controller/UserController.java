@@ -26,6 +26,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -255,7 +256,7 @@ public class UserController {
             return;
         }
         double profit = 0.0;
-        List<Transactions> userTransactions = transactionsRepository.findByUser(user);
+        List<Transactions> userTransactions = transactionsRepository.findByUserOrderByTimestampDesc(user);
         // Dla każdego aktywa w portfelu
         for (Map.Entry<Long, Double> entry : wallet.getAssets().entrySet()) {
             Long assetId = entry.getKey();
@@ -370,7 +371,13 @@ public class UserController {
                 wallet.addAsset(assetId, amount);
                 user.setAccountBalance(user.getAccountBalance() - totalCost);
                 // Zapisz transakcję kupna
-                Transactions transaction = new Transactions(user, asset, amount, price, TransactionType.BUY);
+                Transactions transaction = new Transactions();
+                transaction.setUser(user);
+                transaction.setAsset(asset);
+                transaction.setAmount(amount);
+                transaction.setPrice(price);
+                transaction.setType(Transactions.TransactionType.BUY);
+                transaction.setTimestamp(java.time.LocalDateTime.now());
                 transactionsRepository.save(transaction);
             } else if ("SELL".equalsIgnoreCase(type)) {
                 Double owned = wallet.getAssets().getOrDefault(assetId, 0.0);
@@ -381,7 +388,13 @@ public class UserController {
                 double totalGain = price * amount;
                 user.setAccountBalance(user.getAccountBalance() + totalGain);
                 // Zapisz transakcję sprzedaży
-                Transactions transaction = new Transactions(user, asset, amount, price, TransactionType.SELL);
+                Transactions transaction = new Transactions();
+                transaction.setUser(user);
+                transaction.setAsset(asset);
+                transaction.setAmount(amount);
+                transaction.setPrice(price);
+                transaction.setType(Transactions.TransactionType.SELL);
+                transaction.setTimestamp(java.time.LocalDateTime.now());
                 transactionsRepository.save(transaction);
             } else {
                 return ResponseEntity.badRequest().body(Map.of("error", "Nieprawidłowy typ transakcji"));
@@ -398,6 +411,38 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Błąd podczas realizacji transakcji: " + e.getMessage()));
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{userId}/transactions")
+    public ResponseEntity<?> getUserTransactions(@PathVariable Long userId) {
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Użytkownik nie został znaleziony"));
+
+            List<Transactions> transactions = transactionsRepository.findByUserOrderByTimestampDesc(user);
+            List<Map<String, Object>> formattedTransactions = new ArrayList<>();
+
+            for (Transactions t : transactions) {
+                Map<String, Object> transaction = new HashMap<>();
+                transaction.put("id", t.getId());
+                transaction.put("type", t.getType().toString());
+                transaction.put("assetSymbol", t.getAsset().getSymbol());
+                transaction.put("assetName", t.getAsset().getName());
+                transaction.put("amount", t.getAmount());
+                transaction.put("price", t.getPrice());
+                transaction.put("totalValue", t.getAmount() * t.getPrice());
+                transaction.put("timestamp", t.getTimestamp().toString());
+                formattedTransactions.add(transaction);
+            }
+
+            return ResponseEntity.ok(formattedTransactions);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Wystąpił błąd podczas pobierania transakcji"));
         }
     }
 }

@@ -95,7 +95,7 @@ public class AssetPriceFetcher {
             double profit = 0.0;
             UserWallet wallet = user.getWallet();
             if (wallet != null) {
-                List<Transactions> userTransactions = transactionsRepository.findByUser(user);
+                List<Transactions> userTransactions = transactionsRepository.findByUserOrderByTimestampDesc(user);
                 for (Map.Entry<Long, Double> entry : wallet.getAssets().entrySet()) {
                     Long assetId = entry.getKey();
                     Double amount = entry.getValue();

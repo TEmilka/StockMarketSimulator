@@ -17,12 +17,26 @@ interface UserForm {
     password: string;
 }
 
+interface Transaction {
+    id: number;
+    type: 'BUY' | 'SELL';
+    assetSymbol: string;
+    assetName: string;
+    amount: number;
+    price: number;
+    totalValue: number;
+    timestamp: string;
+}
+
 function Users() {
     const { users, setUsers, addUser } = useStore();
     const { register, handleSubmit, reset } = useForm<UserForm>();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [isAdmin, setIsAdmin] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<number | null>(null);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [loadingTransactions, setLoadingTransactions] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -75,7 +89,7 @@ function Users() {
                     'Authorization': `Bearer ${accessToken}`
                 },
                 body: JSON.stringify({
-                    username: data.username,  // changed from name to username
+                    username: data.username,  // added comma here
                     email: data.email,
                     password: data.password,
                     wallet: { assets: {} }
@@ -115,6 +129,27 @@ function Users() {
 
     const viewUserWallet = (userId: number) => {
         navigate(`/user-wallet/${userId}`);
+    };
+
+    const fetchTransactions = async (userId: number) => {
+        setLoadingTransactions(true);
+        try {
+            const accessToken = localStorage.getItem("accessToken");
+            if (!accessToken) throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
+            
+            const response = await fetch(`http://localhost:8000/api/users/${userId}/transactions`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+            });
+            
+            if (!response.ok) throw new Error("Nie udało się pobrać transakcji");
+            const data = await response.json();
+            setTransactions(data);
+            setSelectedUser(userId);
+        } catch (err) {
+            setError((err as Error).message);
+        } finally {
+            setLoadingTransactions(false);
+        }
     };
 
     return (
@@ -176,6 +211,7 @@ function Users() {
                                         </div>
                                         <div className="admin-user-actions">
                                             <button className="admin-user-wallet-btn" onClick={() => viewUserWallet(user.id!)}>Portfel</button>
+                                            <button className="admin-user-transactions-btn" onClick={() => fetchTransactions(user.id!)}>Transakcje</button>
                                             <button className="admin-user-delete-btn" onClick={() => deleteUser(user.id!)}>Usuń</button>
                                         </div>
                                     </div>
@@ -185,6 +221,41 @@ function Users() {
                             <p className="admin-users-empty">Brak użytkowników</p>
                         )}
                     </div>
+
+                    {selectedUser && (
+                        <div className="admin-users-transactions-section">
+                            <h2 className="admin-users-list-title">Historia transakcji użytkownika</h2>
+                            {loadingTransactions ? (
+                                <p className="admin-users-loading">Ładowanie transakcji...</p>
+                            ) : transactions.length > 0 ? (
+                                <div className="admin-users-transactions">
+                                    {transactions.map((transaction) => (
+                                        <div key={transaction.id} className="admin-user-transaction">
+                                            <div className="transaction-type" data-type={transaction.type}>
+                                                {transaction.type === 'BUY' ? 'Kupno' : 'Sprzedaż'}
+                                            </div>
+                                            <div className="transaction-details">
+                                                <span className="transaction-asset">
+                                                    {transaction.assetName} ({transaction.assetSymbol})
+                                                </span>
+                                                <span className="transaction-amount">
+                                                    {transaction.amount} szt. @ {transaction.price.toFixed(2)} USD
+                                                </span>
+                                                <span className="transaction-total">
+                                                    Wartość: {transaction.totalValue.toFixed(2)} USD
+                                                </span>
+                                            </div>
+                                            <div className="transaction-timestamp">
+                                                {new Date(transaction.timestamp).toLocaleString()}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="admin-users-empty">Brak transakcji</p>
+                            )}
+                        </div>
+                    )}
                 </>
             )}
         </div>
