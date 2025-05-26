@@ -12,8 +12,9 @@ interface User {
 }
 
 interface UserForm {
-    name: string;
+    username: string;  // changed from name to username
     email: string;
+    password: string;
 }
 
 function Users() {
@@ -64,16 +65,27 @@ function Users() {
         setLoading(true);
         setError("");
         try {
+            const accessToken = localStorage.getItem("accessToken");
+            if (!accessToken) throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
+
             const response = await fetch("http://localhost:8000/api/users", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    'Authorization': `Bearer ${accessToken}`
+                },
                 body: JSON.stringify({
-                    name: data.name,
+                    username: data.username,  // changed from name to username
                     email: data.email,
+                    password: data.password,
                     wallet: { assets: {} }
                 }),
             });
+
+            if (response.status === 401) throw new Error("Sesja wygasła. Zaloguj się ponownie.");
+            if (response.status === 403) throw new Error("Brak uprawnień do dodawania użytkowników.");
             if (!response.ok) throw new Error("Nie udało się dodać użytkownika");
+
             const newUser: User = await response.json();
             addUser(newUser);
             reset();
@@ -122,14 +134,20 @@ function Users() {
                 <>
                     <form onSubmit={handleSubmit(addUserToApi)} className="admin-users-form">
                         <input
-                            {...register("name", { required: true })}
-                            placeholder="Imię"
+                            {...register("username", { required: true })}  // changed from name to username
+                            placeholder="Nazwa użytkownika"  // changed placeholder text
                             className="admin-users-input"
                         />
                         <input
                             {...register("email", { required: true })}
                             placeholder="Email"
                             type="email"
+                            className="admin-users-input"
+                        />
+                        <input
+                            {...register("password", { required: true })}
+                            placeholder="Hasło"
+                            type="password"
                             className="admin-users-input"
                         />
                         <button
