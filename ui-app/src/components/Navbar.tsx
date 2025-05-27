@@ -40,9 +40,9 @@ function Navbar() {
                         <button onClick={handleLogout} className="navbar-button">Logout</button>
                     )}
                     <button onClick={handleMyAccountClick} className="navbar-button">My Account</button>
+                    <button onClick={() => navigate('/notifications')} className="navbar-button">Powiadomienia</button>
                 </div>
             </div>
-            <Link to="/notifications" className="navbar-link">Powiadomienia</Link>
         </nav>
     );
 }

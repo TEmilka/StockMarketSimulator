@@ -35,14 +35,18 @@ function Notifications() {
     }, []);
 
     return (
-        <div className="notifications-container">
-            <h1>Powiadomienia</h1>
-            <button onClick={fetchNotifications} disabled={loading}>
-                {loading ? "Ładowanie..." : "Odśwież"}
-            </button>
-            <button onClick={clearNotifications} disabled={loading}>
-                Wyczyść powiadomienia
-            </button>
+        <div className="notifications-container notifications-scrollable">
+            <div className="notifications-header">
+                <h1>Powiadomienia</h1>
+                <div className="notifications-actions">
+                    <button onClick={fetchNotifications} disabled={loading}>
+                        {loading ? "Ładowanie..." : "Odśwież"}
+                    </button>
+                    <button onClick={clearNotifications} disabled={loading}>
+                        Wyczyść powiadomienia
+                    </button>
+                </div>
+            </div>
             <ul>
                 {notifications.length > 0 ? (
                     notifications.map((notification, index) => (
