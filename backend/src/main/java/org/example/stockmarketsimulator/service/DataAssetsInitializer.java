@@ -21,6 +21,7 @@ public class DataAssetsInitializer {
     @PostConstruct
     public void initDefaultAssets() {
         if (assetsRepository.count() == 0) {
+            
             Asset asset1 = new Asset();
             asset1.setName("Apple Inc.");
             asset1.setSymbol("AAPL");
@@ -51,7 +52,27 @@ public class DataAssetsInitializer {
             asset6.setSymbol("BINANCE:BTCUSDT");
             asset6.setPrice(0.0);
 
-            assetsRepository.saveAll(List.of(asset1, asset2, asset3, asset4, asset5, asset6));
+            Asset asset7 = new Asset();
+            asset7.setName("Ethereum");
+            asset7.setSymbol("BINANCE:ETHUSDT");
+            asset7.setPrice(0.0);
+
+            Asset asset8 = new Asset();
+            asset8.setName("Solana");
+            asset8.setSymbol("BINANCE:SOLUSDT");
+            asset8.setPrice(0.0);
+
+            Asset asset9 = new Asset();
+            asset9.setName("Dogecoin");
+            asset9.setSymbol("BINANCE:DOGEUSDT");
+            asset9.setPrice(0.0);
+
+            Asset asset10 = new Asset();
+            asset10.setName("Cosmos");
+            asset10.setSymbol("BINANCE:ATOMUSDT");
+            asset10.setPrice(0.0);
+
+            assetsRepository.saveAll(List.of(asset1, asset2, asset3, asset4, asset5, asset6, asset7, asset8, asset9, asset10));
         }
     }
 }

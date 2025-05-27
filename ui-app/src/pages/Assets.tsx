@@ -44,6 +44,8 @@ function Assets() {
     const [searchTerm, setSearchTerm] = useState("");
     const [sortBy, setSortBy] = useState<"price" | "name" | "id">("id");
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
 
     // Ref do całego kontenera
     const mainContainerRef = useRef<HTMLDivElement | null>(null);
@@ -51,7 +53,7 @@ function Assets() {
 
     const fetchAssets = async () => {
         try {
-            let url = "http://localhost:8000/api/assets?";
+            let url = `http://localhost:8000/api/assets?page=${page}&size=6&`;
             if (searchTerm) url += `search=${encodeURIComponent(searchTerm)}&`;
             if (sortBy !== "id") url += `sortBy=${sortBy}&sortDirection=${sortDirection}`;
             const response = await fetch(url);
@@ -59,7 +61,8 @@ function Assets() {
                 throw new Error("Nie udało się pobrać assetów");
             }
             const data = await response.json();
-            setAssets(data);
+            setAssets(data.content || []);
+            setTotalPages(data.totalPages || 1);
         } catch (err) {
             setError((err as Error).message);
         }
@@ -69,7 +72,7 @@ function Assets() {
         fetchAssets();
         const interval = setInterval(fetchAssets, 10000); // co 10 sekund
         return () => clearInterval(interval);
-    }, [searchTerm, sortBy, sortDirection]); // Odświeżaj przy zmianie searchTerm, sortBy, sortDirection
+    }, [searchTerm, sortBy, sortDirection, page]); // Odświeżaj przy zmianie searchTerm, sortBy, sortDirection, page
 
     useEffect(() => {
         const checkAdminStatus = () => {
@@ -211,12 +214,12 @@ function Assets() {
                     type="text"
                     placeholder="Szukaj po nazwie lub symbolu..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }}
                     className="assets-filter-input"
                 />
                 <select
                     value={sortBy}
-                    onChange={e => setSortBy(e.target.value as "price" | "name" | "id")}
+                    onChange={e => { setSortBy(e.target.value as "price" | "name" | "id"); setPage(0); }}
                     className="assets-filter-select"
                 >
                     <option value="id">Domyślne</option>
@@ -224,10 +227,31 @@ function Assets() {
                     <option value="name">Nazwa</option>
                 </select>
                 <button
-                    onClick={() => setSortDirection(prev => prev === "asc" ? "desc" : "asc")}
+                    onClick={() => { setSortDirection(prev => prev === "asc" ? "desc" : "asc"); setPage(0); }}
                     className="assets-filter-btn"
                 >
                     {sortDirection === "asc" ? "↑" : "↓"}
+                </button>
+            </div>
+
+            {/* PAGINACJA */}
+            <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginBottom: "1.5rem" }}>
+                <button
+                    className="assets-btn"
+                    disabled={page === 0}
+                    onClick={() => setPage(p => Math.max(0, p - 1))}
+                >
+                    Poprzednia
+                </button>
+                <span style={{ color: "#fff", fontWeight: 600 }}>
+                    Strona {page + 1} z {totalPages}
+                </span>
+                <button
+                    className="assets-btn"
+                    disabled={page + 1 >= totalPages}
+                    onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                >
+                    Następna
                 </button>
             </div>
 

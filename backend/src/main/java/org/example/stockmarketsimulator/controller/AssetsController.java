@@ -13,6 +13,9 @@ import org.example.stockmarketsimulator.model.AssetPriceHistory;
 import org.example.stockmarketsimulator.repository.AssetsRepository;
 import org.example.stockmarketsimulator.repository.AssetPriceHistoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,7 +53,9 @@ public class AssetsController {
     public ResponseEntity<?> getAssets(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDirection
+            @RequestParam(required = false) String sortDirection,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
     ) {
         try {
             List<Asset> assets = assetsRepository.findAll();
@@ -82,7 +87,24 @@ public class AssetsController {
                 assets = assets.stream().sorted(comparator).collect(Collectors.toList());
             }
 
-            return ResponseEntity.ok(assets);
+            if (page == null || size == null) {
+                // Old behavior: return plain array for tests
+                return ResponseEntity.ok(assets);
+            }
+
+            // Paginacja
+            int fromIndex = Math.min(page * size, assets.size());
+            int toIndex = Math.min(fromIndex + size, assets.size());
+            List<Asset> pagedAssets = assets.subList(fromIndex, toIndex);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("content", pagedAssets);
+            response.put("page", page);
+            response.put("size", size);
+            response.put("totalElements", assets.size());
+            response.put("totalPages", (int) Math.ceil((double) assets.size() / size));
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "Wystąpił błąd podczas pobierania aktywów");
