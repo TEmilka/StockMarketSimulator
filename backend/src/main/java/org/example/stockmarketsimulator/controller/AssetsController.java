@@ -49,10 +49,9 @@ public class AssetsController {
     @GetMapping
     public ResponseEntity<?> getAssets(
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) Double minPrice,
-            @RequestParam(required = false) Double maxPrice,
             @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDirection) {
+            @RequestParam(required = false) String sortDirection
+    ) {
         try {
             List<Asset> assets = assetsRepository.findAll();
 
@@ -66,33 +65,21 @@ public class AssetsController {
                         .collect(Collectors.toList());
             }
 
-            // Filtrowanie po minimalnej cenie
-            if (minPrice != null) {
-                assets = assets.stream()
-                        .filter(asset -> asset.getPrice() >= minPrice)
-                        .collect(Collectors.toList());
-            }
-
-            // Filtrowanie po maksymalnej cenie
-            if (maxPrice != null) {
-                assets = assets.stream()
-                        .filter(asset -> asset.getPrice() <= maxPrice)
-                        .collect(Collectors.toList());
-            }
-
-            // Sort results
+            // Sortowanie po cenie lub nazwie
             if (sortBy != null) {
-                boolean isAsc = sortDirection == null || sortDirection.equalsIgnoreCase("asc");
-                Comparator<Asset> comparator = switch (sortBy.toLowerCase()) {
-                    case "price" -> Comparator.comparing(Asset::getPrice);
-                    case "name" -> Comparator.comparing(Asset::getName);
-                    case "symbol" -> Comparator.comparing(Asset::getSymbol);
-                    default -> Comparator.comparing(Asset::getId);
-                };
-
-                assets = assets.stream()
-                        .sorted(isAsc ? comparator : comparator.reversed())
-                        .collect(Collectors.toList());
+                boolean asc = sortDirection == null || sortDirection.equalsIgnoreCase("asc");
+                Comparator<Asset> comparator;
+                if ("price".equalsIgnoreCase(sortBy)) {
+                    comparator = Comparator.comparing(Asset::getPrice);
+                } else if ("name".equalsIgnoreCase(sortBy)) {
+                    comparator = Comparator.comparing(Asset::getName, String.CASE_INSENSITIVE_ORDER);
+                } else {
+                    comparator = Comparator.comparing(Asset::getId);
+                }
+                if (!asc) {
+                    comparator = comparator.reversed();
+                }
+                assets = assets.stream().sorted(comparator).collect(Collectors.toList());
             }
 
             return ResponseEntity.ok(assets);

@@ -42,6 +42,8 @@ function Assets() {
     const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
     const [priceHistory, setPriceHistory] = useState<PriceHistoryPoint[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
+    const [sortBy, setSortBy] = useState<"price" | "name" | "id">("id");
+    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
     // Ref do całego kontenera
     const mainContainerRef = useRef<HTMLDivElement | null>(null);
@@ -50,9 +52,8 @@ function Assets() {
     const fetchAssets = async () => {
         try {
             let url = "http://localhost:8000/api/assets?";
-            if (searchTerm) url += `search=${encodeURIComponent(searchTerm)}`;
-            // Usuwamy minPrice, maxPrice, sortBy, sortDirection z zapytania
-
+            if (searchTerm) url += `search=${encodeURIComponent(searchTerm)}&`;
+            if (sortBy !== "id") url += `sortBy=${sortBy}&sortDirection=${sortDirection}`;
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error("Nie udało się pobrać assetów");
@@ -68,7 +69,7 @@ function Assets() {
         fetchAssets();
         const interval = setInterval(fetchAssets, 10000); // co 10 sekund
         return () => clearInterval(interval);
-    }, [searchTerm]); // Odświeżaj przy zmianie searchTerm
+    }, [searchTerm, sortBy, sortDirection]); // Odświeżaj przy zmianie searchTerm, sortBy, sortDirection
 
     useEffect(() => {
         const checkAdminStatus = () => {
@@ -204,7 +205,7 @@ function Assets() {
                 </p>
             </div>
 
-            {/* Pole wyszukiwania po nazwie lub symbolu */}
+            {/* Pole wyszukiwania po nazwie lub symbolu oraz sortowanie */}
             <div className="assets-filters">
                 <input
                     type="text"
@@ -213,6 +214,21 @@ function Assets() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="assets-filter-input"
                 />
+                <select
+                    value={sortBy}
+                    onChange={e => setSortBy(e.target.value as "price" | "name" | "id")}
+                    className="assets-filter-select"
+                >
+                    <option value="id">Domyślne</option>
+                    <option value="price">Cena</option>
+                    <option value="name">Nazwa</option>
+                </select>
+                <button
+                    onClick={() => setSortDirection(prev => prev === "asc" ? "desc" : "asc")}
+                    className="assets-filter-btn"
+                >
+                    {sortDirection === "asc" ? "↑" : "↓"}
+                </button>
             </div>
 
             {isAdmin && (
