@@ -95,6 +95,7 @@ public class SecurityConfig {
                         .requestMatchers("/add-user").permitAll()
                         .requestMatchers("/api/users/{userId}/wallet/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers("/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(handler -> {

@@ -13,6 +13,7 @@ import org.example.stockmarketsimulator.model.AssetPriceHistory;
 import org.example.stockmarketsimulator.repository.AssetsRepository;
 import org.example.stockmarketsimulator.repository.AssetPriceHistoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,10 +21,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/assets")
@@ -44,9 +47,54 @@ public class AssetsController {
             @ApiResponse(responseCode = "500", description = "Wewnętrzny błąd serwera", content = @Content)
     })
     @GetMapping
-    public ResponseEntity<?> getAssets() {
+    public ResponseEntity<?> getAssets(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) String sortDirection) {
         try {
             List<Asset> assets = assetsRepository.findAll();
+
+            // Filtrowanie po nazwie lub symbolu
+            if (search != null && !search.isEmpty()) {
+                String searchLower = search.toLowerCase();
+                assets = assets.stream()
+                        .filter(asset ->
+                                asset.getSymbol().toLowerCase().contains(searchLower) ||
+                                asset.getName().toLowerCase().contains(searchLower))
+                        .collect(Collectors.toList());
+            }
+
+            // Filtrowanie po minimalnej cenie
+            if (minPrice != null) {
+                assets = assets.stream()
+                        .filter(asset -> asset.getPrice() >= minPrice)
+                        .collect(Collectors.toList());
+            }
+
+            // Filtrowanie po maksymalnej cenie
+            if (maxPrice != null) {
+                assets = assets.stream()
+                        .filter(asset -> asset.getPrice() <= maxPrice)
+                        .collect(Collectors.toList());
+            }
+
+            // Sort results
+            if (sortBy != null) {
+                boolean isAsc = sortDirection == null || sortDirection.equalsIgnoreCase("asc");
+                Comparator<Asset> comparator = switch (sortBy.toLowerCase()) {
+                    case "price" -> Comparator.comparing(Asset::getPrice);
+                    case "name" -> Comparator.comparing(Asset::getName);
+                    case "symbol" -> Comparator.comparing(Asset::getSymbol);
+                    default -> Comparator.comparing(Asset::getId);
+                };
+
+                assets = assets.stream()
+                        .sorted(isAsc ? comparator : comparator.reversed())
+                        .collect(Collectors.toList());
+            }
+
             return ResponseEntity.ok(assets);
         } catch (Exception e) {
             Map<String, String> response = new HashMap<>();

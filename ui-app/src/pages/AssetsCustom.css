@@ -231,6 +231,64 @@
     margin-top: 2rem;
 }
 
+/* --- FILTRY --- */
+.assets-filters {
+    width: 90vw;
+    max-width: 1100px;
+    margin: 0 auto 2rem auto;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    background: #181c2f;
+    border-radius: 1rem;
+    box-shadow: 0 4px 32px rgba(146, 64, 255, 0.1);
+}
+
+.assets-filter-input {
+    padding: 0.8rem 1.2rem;
+    border: 2px solid #4b5563;
+    border-radius: 0.7rem;
+    font-size: 1rem;
+    background: #1f2937;
+    color: #e0e7ef;
+    min-width: 150px;
+    transition: border-color 0.2s;
+}
+
+.assets-filter-input:focus {
+    border-color: #9340ff;
+    outline: none;
+}
+
+.assets-filter-select {
+    padding: 0.8rem 1.2rem;
+    border: 2px solid #4b5563;
+    border-radius: 0.7rem;
+    font-size: 1rem;
+    background: #1f2937;
+    color: #e0e7ef;
+    min-width: 120px;
+    cursor: pointer;
+}
+
+.assets-filter-btn {
+    background: #2d3748;
+    color: #e0e7ef;
+    border: none;
+    border-radius: 0.7rem;
+    padding: 0.8rem 1.2rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.assets-filter-btn:hover {
+    background: #374151;
+}
+
 /* --- RESPONSYWNOŚĆ --- */
 @media (max-width: 1300px) {
     .assets-list {

@@ -41,6 +41,7 @@ function Assets() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
     const [priceHistory, setPriceHistory] = useState<PriceHistoryPoint[]>([]);
+    const [searchTerm, setSearchTerm] = useState("");
 
     // Ref do całego kontenera
     const mainContainerRef = useRef<HTMLDivElement | null>(null);
@@ -48,7 +49,11 @@ function Assets() {
 
     const fetchAssets = async () => {
         try {
-            const response = await fetch("http://localhost:8000/api/assets");
+            let url = "http://localhost:8000/api/assets?";
+            if (searchTerm) url += `search=${encodeURIComponent(searchTerm)}`;
+            // Usuwamy minPrice, maxPrice, sortBy, sortDirection z zapytania
+
+            const response = await fetch(url);
             if (!response.ok) {
                 throw new Error("Nie udało się pobrać assetów");
             }
@@ -63,7 +68,7 @@ function Assets() {
         fetchAssets();
         const interval = setInterval(fetchAssets, 10000); // co 10 sekund
         return () => clearInterval(interval);
-    }, []);
+    }, [searchTerm]); // Odświeżaj przy zmianie searchTerm
 
     useEffect(() => {
         const checkAdminStatus = () => {
@@ -197,6 +202,17 @@ function Assets() {
                     Tutaj znajdziesz wszystkie dostępne aktywa giełdowe. Kliknij w wybrane aktywo, aby zobaczyć jego wykres cenowy oraz szczegóły.<br />
                     <span className="assets-hint">Ceny aktualizują się automatycznie co 10 sekund.</span>
                 </p>
+            </div>
+
+            {/* Pole wyszukiwania po nazwie lub symbolu */}
+            <div className="assets-filters">
+                <input
+                    type="text"
+                    placeholder="Szukaj po nazwie lub symbolu..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="assets-filter-input"
+                />
             </div>
 
             {isAdmin && (

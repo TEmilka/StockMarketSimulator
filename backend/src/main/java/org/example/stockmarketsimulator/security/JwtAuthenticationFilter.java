@@ -30,6 +30,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.startsWith("/api/auth/") ||
+               path.equals("/api/logout") ||
+               path.equals("/") ||
+               path.startsWith("/swagger-ui") ||
+               path.startsWith("/v3/api-docs") ||
+               path.startsWith("/assets/") ||
+               path.startsWith("/favicon.ico") ||
+               path.endsWith(".js") ||
+               path.endsWith(".css") ||
+               path.endsWith(".ico") ||
+               path.endsWith(".png") ||
+               path.endsWith(".jpg") ||
+               path.endsWith(".svg");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
