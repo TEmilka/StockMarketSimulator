@@ -50,7 +50,7 @@ public class UserControllerTests {
         when(userRepository.findAll()).thenReturn(Collections.singletonList(user));
 
         // When & Then
-        mockMvc.perform(get("/api/users"))
+        mockMvc.perform(get("/api/v1/users"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].username").value("John Doe"))
                 .andExpect(jsonPath("$[0].email").value("john.doe@example.com"));
@@ -63,7 +63,7 @@ public class UserControllerTests {
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         // When & Then
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post("/api/v1/users")
                         .contentType("application/json")
                         .content("{\"username\":\"John Doe\",\"email\":\"john.doe@example.com\",\"password\":\"password123\"}"))
                 .andExpect(status().isCreated())
@@ -75,14 +75,14 @@ public class UserControllerTests {
     @Test
     void addUser_shouldReturnBadRequest_whenNameOrEmailOrPasswordIsMissing() throws Exception {
         // When & Then
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post("/api/v1/users")
                         .contentType("application/json")
                         .content("{\"name\":\"John Doe\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Nazwa użytkownika, email i hasło są wymagane."))
                 .andExpect(jsonPath("$.status").value(400));
 
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post("/api/v1/users")
                         .contentType("application/json")
                         .content("{\"email\":\"john.doe@example.com\",\"password\":\"password123\"}"))
                 .andExpect(status().isBadRequest())
@@ -98,7 +98,7 @@ public class UserControllerTests {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // When & Then
-        mockMvc.perform(delete("/api/users/{id}", userId))
+        mockMvc.perform(delete("/api/v1/users/{id}", userId))
                 .andExpect(status().isNoContent());
 
         verify(userRepository, times(1)).deleteById(userId);
@@ -111,7 +111,7 @@ public class UserControllerTests {
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // When & Then
-        mockMvc.perform(delete("/api/users/{id}", userId))
+        mockMvc.perform(delete("/api/v1/users/{id}", userId))
                 .andExpect(status().isNotFound());
 
         verify(userRepository, never()).deleteById(userId);
@@ -131,7 +131,7 @@ public class UserControllerTests {
         when(assetsRepository.findById(1L)).thenReturn(Optional.of(asset));
 
         // When & Then
-        mockMvc.perform(get("/api/users/{userId}/wallet/details", userId))
+        mockMvc.perform(get("/api/v1/users/{userId}/wallet/details", userId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].symbol").value("AAPL"))
                 .andExpect(jsonPath("$[0].name").value("Apple Inc."))
@@ -146,7 +146,7 @@ public class UserControllerTests {
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // When & Then
-        mockMvc.perform(get("/api/users/{userId}/wallet/details", userId))
+        mockMvc.perform(get("/api/v1/users/{userId}/wallet/details", userId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Użytkownik nie został znaleziony"))
                 .andExpect(jsonPath("$.status").value(404));
@@ -168,7 +168,7 @@ public class UserControllerTests {
         when(assetsRepository.findById(assetId)).thenReturn(Optional.of(asset));
 
         // When & Then
-        mockMvc.perform(post("/api/users/{userId}/wallet/add", userId)
+        mockMvc.perform(post("/api/v1/users/{userId}/wallet/add", userId)
                         .contentType("application/json")
                         .content("{\"assetId\":1,\"amount\":10.0}"))
                 .andExpect(status().isOk())
@@ -185,7 +185,7 @@ public class UserControllerTests {
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // When & Then
-        mockMvc.perform(post("/api/users/{userId}/wallet/add", userId)
+        mockMvc.perform(post("/api/v1/users/{userId}/wallet/add", userId)
                         .contentType("application/json")
                         .content("{\"assetId\":1,\"amount\":10.0}"))
                 .andExpect(status().isNotFound())

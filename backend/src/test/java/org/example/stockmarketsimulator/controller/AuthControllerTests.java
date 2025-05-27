@@ -64,7 +64,7 @@ public class AuthControllerTests {
         when(jwtUtils.generateToken("JohnDoe")).thenReturn("mocked-jwt-token");
 
         // When & Then
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"JohnDoe\",\"password\":\"password123\"}"))
                 .andExpect(status().isOk())
@@ -82,7 +82,7 @@ public class AuthControllerTests {
         when(passwordEncoder.encode("password123")).thenReturn("encodedPassword123");
 
         // When & Then
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .characterEncoding("UTF-8")
                         .content("{\"username\":\"JohnDoe\",\"email\":\"john.doe@example.com\",\"password\":\"password123\"}"))
@@ -96,7 +96,7 @@ public class AuthControllerTests {
         when(userRepository.existsByEmail("john.doe@example.com")).thenReturn(true);
 
         // When & Then
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"JohnDoe\",\"email\":\"john.doe@example.com\",\"password\":\"password123\"}"))
                 .andExpect(status().isBadRequest())
@@ -109,7 +109,7 @@ public class AuthControllerTests {
         when(userRepository.existsByUsername("JohnDoe")).thenReturn(true);
 
         // When & Then
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"JohnDoe\",\"email\":\"john.doe@example.com\",\"password\":\"password123\"}"))
                 .andExpect(status().isBadRequest())

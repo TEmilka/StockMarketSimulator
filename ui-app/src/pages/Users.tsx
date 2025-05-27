@@ -40,7 +40,7 @@ function Users() {
 
     const fetchUsers = async () => {
         try {
-            const response = await fetch("http://localhost:8000/api/users", {
+            const response = await fetch("http://localhost:8000/api/v1/users", {
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
@@ -77,7 +77,7 @@ function Users() {
         setLoading(true);
         setError("");
         try {
-            const response = await fetch("http://localhost:8000/api/users", {
+            const response = await fetch("http://localhost:8000/api/v1/users", {
                 method: "POST",
                 credentials: 'include',
                 headers: { 
@@ -102,11 +102,10 @@ function Users() {
 
     const deleteUser = async (id: number) => {
         try {
-            const accessToken = localStorage.getItem("accessToken");
-            if (!accessToken) throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
-            const response = await fetch(`http://localhost:8000/api/users/${id}`, {
+            const response = await fetch(`http://localhost:8000/api/v1/users/${id}`, {
                 method: "DELETE",
-                headers: { 'Authorization': `Bearer ${accessToken}` }
+                credentials: 'include',
+                headers: { "Content-Type": "application/json" }
             });
             if (response.status === 401) throw new Error("Sesja wygasła. Zaloguj się ponownie.");
             if (response.status === 403) throw new Error("Brak uprawnień do usuwania użytkowników.");
@@ -127,7 +126,7 @@ function Users() {
             const accessToken = localStorage.getItem("accessToken");
             if (!accessToken) throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
             
-            const response = await fetch(`http://localhost:8000/api/users/${userId}/transactions`, {
+            const response = await fetch(`http://localhost:8000/api/v1/users/${userId}/transactions`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` }
             });
             

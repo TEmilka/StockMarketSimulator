@@ -42,7 +42,7 @@ function UserWallet() {
 
     const fetchWalletDetails = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/api/users/${userId}/wallet/details`, {
+            const response = await fetch(`http://localhost:8000/api/v1/users/${userId}/wallet/details`, {
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
@@ -50,11 +50,18 @@ function UserWallet() {
             });
 
             if (!response.ok) {
+                let errorMsg = 'Failed to fetch wallet details';
+                try {
+                    const errorData = await response.json();
+                    errorMsg = errorData.error || errorMsg;
+                } catch {
+                    // response is not JSON (probably HTML)
+                }
                 if (response.status === 401) {
                     navigate('/login');
                     return;
                 }
-                throw new Error('Failed to fetch wallet details');
+                throw new Error(errorMsg);
             }
 
             const data = await response.json();
@@ -68,7 +75,7 @@ function UserWallet() {
 
     const fetchAccountInfo = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/api/users/${userId}`, {
+            const response = await fetch(`http://localhost:8000/api/v1/users/${userId}`, {
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
@@ -76,11 +83,18 @@ function UserWallet() {
             });
 
             if (!response.ok) {
+                let errorMsg = 'Failed to fetch user details';
+                try {
+                    const errorData = await response.json();
+                    errorMsg = errorData.error || errorMsg;
+                } catch {
+                    // response is not JSON (probably HTML)
+                }
                 if (response.status === 401) {
                     navigate('/login');
                     return;
                 }
-                throw new Error('Failed to fetch user details');
+                throw new Error(errorMsg);
             }
 
             const data = await response.json();
@@ -90,13 +104,13 @@ function UserWallet() {
                 username: data.username
             });
         } catch (err) {
-            // ignore
+            setError((err as Error).message);
         }
     };
 
     const fetchAvailableAssets = async () => {
         try {
-            const response = await fetch("http://localhost:8000/api/assets");
+            const response = await fetch("http://localhost:8000/api/v1/assets");
             if (!response.ok) throw new Error("Nie udało się pobrać dostępnych aktywów");
             const data = await response.json();
             setAvailableAssets(data);
@@ -128,7 +142,7 @@ function UserWallet() {
     const handleAddFunds = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const response = await fetch(`http://localhost:8000/api/users/${userId}/add-funds`, {
+            const response = await fetch(`http://localhost:8000/api/v1/users/${userId}/add-funds`, {
                 method: "POST",
                 credentials: 'include',
                 headers: {
@@ -159,7 +173,7 @@ function UserWallet() {
     const handleTrade = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const response = await fetch(`http://localhost:8000/api/users/${userId}/wallet/trade`, {
+            const response = await fetch(`http://localhost:8000/api/v1/users/${userId}/wallet/trade`, {
                 method: "POST",
                 credentials: 'include',
                 headers: {

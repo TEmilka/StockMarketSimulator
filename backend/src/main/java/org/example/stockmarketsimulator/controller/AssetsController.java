@@ -32,7 +32,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/assets")
+@RequestMapping("/api/v1/assets")
 public class AssetsController {
 
     @Autowired

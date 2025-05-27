@@ -50,7 +50,7 @@ public class AssetsControllerTests {
         when(assetsRepository.findAll()).thenReturn(Collections.singletonList(asset));
 
         // When & Then
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/assets"))
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/assets"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].symbol").value("AAPL"))
                 .andExpect(jsonPath("$[0].name").value("Apple Inc."))
@@ -67,7 +67,7 @@ public class AssetsControllerTests {
         // When & Then
         when(assetsRepository.save(any(Asset.class))).thenReturn(savedAsset);
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                        .post("/api/assets")
+                        .post("/api/v1/assets")
                         .contentType("application/json")
                         .content("{\"symbol\":\"AAPL\",\"price\":150.0,\"name\":\"Apple Inc.\"}"))
                 .andExpect(status().isCreated())
@@ -86,7 +86,7 @@ public class AssetsControllerTests {
 
         // When & Then
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                        .delete("/api/assets/{id}", assetId))
+                        .delete("/api/v1/assets/{id}", assetId))
                 .andExpect(status().isNoContent());
 
         verify(assetsRepository, times(1)).deleteById(assetId);
@@ -100,7 +100,7 @@ public class AssetsControllerTests {
         when(assetsRepository.findById(assetId)).thenReturn(Optional.empty());
         // When & Then
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                        .delete("/api/assets/{id}", assetId))
+                        .delete("/api/v1/assets/{id}", assetId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Aktywo o ID 1 nie zostało znalezione."))
                 .andExpect(jsonPath("$.status").value(404));

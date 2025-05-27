@@ -53,7 +53,7 @@ function Assets() {
 
     const fetchAssets = async () => {
         try {
-            let url = `http://localhost:8000/api/assets?page=${page}&size=6&`;
+            let url = `http://localhost:8000/api/v1/assets?page=${page}&size=6&`;
             if (searchTerm) url += `search=${encodeURIComponent(searchTerm)}&`;
             if (sortBy !== "id") url += `sortBy=${sortBy}&sortDirection=${sortDirection}`;
             const response = await fetch(url);
@@ -99,7 +99,7 @@ function Assets() {
                 throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
             }
 
-            const response = await fetch("http://localhost:8000/api/assets", {
+            const response = await fetch("http://localhost:8000/api/v1/assets", {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",
@@ -134,7 +134,7 @@ function Assets() {
                 throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
             }
 
-            const response = await fetch(`http://localhost:8000/api/assets/${id}`, {
+            const response = await fetch(`http://localhost:8000/api/v1/assets/${id}`, {
                 method: "DELETE",
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
@@ -165,7 +165,7 @@ function Assets() {
         }
         const fetchHistory = async () => {
             try {
-                const response = await fetch(`http://localhost:8000/api/assets/${selectedAsset.id}/history`);
+                const response = await fetch(`http://localhost:8000/api/v1/assets/${selectedAsset.id}/history`);
                 if (!response.ok) throw new Error("Nie udało się pobrać historii cen");
                 const data = await response.json();
                 setPriceHistory(data);
