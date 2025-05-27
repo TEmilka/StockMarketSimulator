@@ -42,6 +42,7 @@ function Navbar() {
                     <button onClick={handleMyAccountClick} className="navbar-button">My Account</button>
                 </div>
             </div>
+            <Link to="/notifications" className="navbar-link">Powiadomienia</Link>
         </nav>
     );
 }
