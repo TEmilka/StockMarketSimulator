@@ -24,7 +24,7 @@ function Login() {
             });
 
             if (!response.ok) {
-                throw new Error("Nie udało się zalogować");
+                throw new Error("Bledne dane logowania lub użytkownik nie istnieje");
             }
 
             const data = await response.json();
@@ -49,7 +49,8 @@ function Login() {
             });
 
             if (!response.ok) {
-                throw new Error("Nie udało się zarejestrować");
+                const errorText = await response.text();
+                throw new Error(errorText);
             }
 
             setIsRegistering(false);
