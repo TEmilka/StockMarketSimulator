@@ -61,9 +61,9 @@ function Assets() {
 
     useEffect(() => {
         fetchAssets();
-        const interval = setInterval(fetchAssets, 10000); // co 10 sekund
+        const interval = setInterval(fetchAssets, 10000);
         return () => clearInterval(interval);
-    }, [searchTerm, sortBy, sortDirection, page]); // Odświeżaj przy zmianie searchTerm, sortBy, sortDirection, page
+    }, [searchTerm, sortBy, sortDirection, page]);
 
     useEffect(() => {
         const checkAdminStatus = () => {

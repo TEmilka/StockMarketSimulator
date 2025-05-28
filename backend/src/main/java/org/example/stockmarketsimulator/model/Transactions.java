@@ -26,10 +26,8 @@ public class Transactions {
         BUY, SELL
     }
 
-    // Bezargumentowy konstruktor wymagany przez JPA
     public Transactions() {}
 
-    // Gettery i settery
     public Long getId() {
         return id;
     }

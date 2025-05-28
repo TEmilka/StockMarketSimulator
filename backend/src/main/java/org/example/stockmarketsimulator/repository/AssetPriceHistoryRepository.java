@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface AssetPriceHistoryRepository extends JpaRepository<AssetPriceHistory, Long> {
     List<AssetPriceHistory> findByAssetOrderByTimestampAsc(Asset asset);
-    List<AssetPriceHistory> findTop30ByAssetOrderByTimestampDesc(Asset asset); // ostatnie 30 punktów
+    List<AssetPriceHistory> findTop30ByAssetOrderByTimestampDesc(Asset asset);
 }

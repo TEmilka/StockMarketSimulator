@@ -56,7 +56,6 @@ function UserWallet() {
                     const errorData = await response.json();
                     errorMsg = errorData.error || errorMsg;
                 } catch {
-                    // response is not JSON (probably HTML)
                 }
                 if (response.status === 401) {
                     navigate('/login');
@@ -89,7 +88,6 @@ function UserWallet() {
                     const errorData = await response.json();
                     errorMsg = errorData.error || errorMsg;
                 } catch {
-                    // response is not JSON (probably HTML)
                 }
                 if (response.status === 401) {
                     navigate('/login');

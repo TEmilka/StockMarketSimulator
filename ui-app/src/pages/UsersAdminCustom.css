@@ -1,4 +1,3 @@
-/* --- GŁÓWNY KONTENER STRONY --- */
 .admin-users-container {
     height: 100vh;
     min-height: 100vh;
@@ -16,7 +15,6 @@
     left: 0;
 }
 
-/* --- NAGŁÓWEK --- */
 .admin-users-header {
     text-align: center;
     margin: 2rem 0 3rem 0;
@@ -41,7 +39,6 @@
     margin: 0 auto;
 }
 
-/* --- FORMULARZ DODAWANIA UŻYTKOWNIKA --- */
 .admin-users-form {
     width: 90vw;
     max-width: 1100px;
@@ -92,7 +89,6 @@
     cursor: not-allowed;
 }
 
-/* --- LISTA UŻYTKOWNIKÓW --- */
 .admin-users-list-section {
     width: 90vw;
     max-width: 1100px;
@@ -216,7 +212,6 @@
     border-radius: 0.7rem;
 }
 
-/* --- SEKCJA TRANSAKCJI --- */
 .admin-users-transactions-section {
     width: 90vw;
     max-width: 1100px;
@@ -301,7 +296,6 @@
     padding: 2rem;
 }
 
-/* --- RESPONSYWNOŚĆ --- */
 @media (max-width: 768px) {
     .admin-users-form,
     .admin-users-list-section {

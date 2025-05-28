@@ -12,22 +12,22 @@ public class User {
     private Long id;
 
     @Column(unique = true)
-    private String username;  // changed from name to username
+    private String username;
 
     @Column(unique = true, nullable = false)
     private String email;
 
     @Column(nullable = false)
-    private String password; // <-- NOWE POLE
+    private String password;
 
     @Column(nullable = false)
-    private String role = "ROLE_USER"; // Domyślnie każdy nowy użytkownik ma rolę USER
+    private String role = "ROLE_USER";
 
     @Column(nullable = false)
-    private double accountBalance = 0.0; // Stan konta użytkownika
+    private double accountBalance = 0.0; 
 
     @Column(nullable = false)
-    private double profit = 0.0; // Profit uzyskany przez użytkownika
+    private double profit = 0.0;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference

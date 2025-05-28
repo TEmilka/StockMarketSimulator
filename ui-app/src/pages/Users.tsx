@@ -72,7 +72,6 @@ function Users() {
         setLoading(true);
         setError("");
         try {
-            // Backend oczekuje "username"
             const payload = {
                 username: data.username,
                 email: data.email,
@@ -118,12 +117,10 @@ function Users() {
 
     const viewUserWallet = async (userId: number) => {
         try {
-            // Prefetch wallet data before navigation
             const response = await fetch(`http://localhost:8000/api/v1/users/${userId}/wallet/details`, {
                 credentials: 'include'
             });
             if (response.ok) {
-                // Store in global state or localStorage for instant access after navigation
                 localStorage.setItem(`wallet_${userId}`, JSON.stringify(await response.json()));
             }
             navigate(`/user-wallet/${userId}`);
@@ -157,7 +154,6 @@ function Users() {
             setTransactions(transactionsData);
             setSelectedUser(userId);
             
-            // Cache user data
             localStorage.setItem(`user_${userId}`, JSON.stringify(userData));
         } catch (err) {
             setError((err as Error).message);

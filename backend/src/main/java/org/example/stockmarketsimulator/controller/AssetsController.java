@@ -48,7 +48,6 @@ public class AssetsController {
         try {
             var assets = assetService.getAssets(search, sortBy, sortDirection, page, size);
             if (page == null || size == null) {
-                // Zwracaj tylko tablicę (nie obiekt z "content")
                 return ResponseEntity.ok(assets.get("content"));
             }
             return ResponseEntity.ok(assets);

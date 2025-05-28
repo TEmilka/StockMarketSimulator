@@ -1,4 +1,4 @@
-/* --- GŁÓWNY KONTENER STRONY --- */
+
 .home-main-container {
     min-height: 100vh;
     width: 100vw;
@@ -9,12 +9,10 @@
     justify-content: flex-start;
     align-items: stretch;
     background: linear-gradient(135deg, #101728 0%, #101728 100%);
-    /* Delikatny pattern w tle */
     background-repeat: repeat;
-    padding-top: 80px; /* Odstęp od navbaru */
+    padding-top: 80px;
 }
 
-/* --- KONTENER NA ZAWARTOŚĆ (środek strony) --- */
 .home-content-wrapper {
     width: 100%;
     max-width: 1200px;
@@ -28,15 +26,14 @@
     flex: 1;
 }
 
-/* --- LEWA KOLUMNA: Nagłówek i opis aplikacji --- */
 .home-header {
     margin-top: 4rem;
-    text-align: center; /* zmiana z left na center */
+    text-align: center;
     max-width: 500px;
     flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center; /* wyśrodkowanie tytułu i obrazka */
+    align-items: center;
 }
 
 .home-title {
@@ -62,7 +59,6 @@
     font-size: 1.1rem;
 }
 
-/* --- Ikona byka i niedźwiedzia --- */
 .home-header-icons {
     display: flex;
     justify-content: flex-start;
@@ -81,7 +77,6 @@
     user-select: none;
 }
 
-/* --- ŚRODKOWA KOLUMNA: sekcja "Co możesz zrobić?" + przycisk aktywów --- */
 .home-assets-section {
     display: flex;
     flex-direction: column;
@@ -93,7 +88,6 @@
     margin-top: 4rem;
 }
 
-/* --- Przycisk "Przeglądaj Aktywa" --- */
 .home-assets-btn {
     background: linear-gradient(90deg, #ff3c5f 0%, #9340ff 100%);
     color: white;
@@ -111,7 +105,6 @@
     transform: translateY(-2px) scale(1.03);
 }
 
-/* --- Box "Co możesz zrobić?" --- */
 .home-assets-info {
     background: #fff;
     border-radius: 1rem;
@@ -120,7 +113,7 @@
     max-width: 400px;
     text-align: left;
     margin-top: 2rem;
-    margin-bottom: 2.5rem; /* Odstęp pod boxem do przycisku */
+    margin-bottom: 2.5rem;
 }
 
 .home-assets-info h3 {
@@ -137,7 +130,6 @@
     font-size: 1.05rem;
 }
 
-/* --- PRAWA KOLUMNA: sekcja "Dlaczego warto korzystać?" --- */
 .home-side-info {
     flex: 1;
     min-width: 300px;
@@ -177,7 +169,6 @@
     box-shadow: 0 2px 8px rgba(16, 185, 129, 0.05);
 }
 
-/* --- STOPKA --- */
 .home-footer {
     margin-top: auto;
     margin-bottom: 2rem;
@@ -210,7 +201,6 @@
     opacity: 0.8;
 }
 
-/* --- RESPONSYWNOŚĆ --- */
 @media (max-width: 1100px) {
     .home-content-wrapper {
         flex-direction: column;
@@ -226,7 +216,6 @@
     }
 }
 
-/* --- Obrazek byka i niedźwiedzia pod tytułem --- */
 .home-bullbear-img {
     width: 100%;
     max-width: 420px;
@@ -237,9 +226,7 @@
     object-fit: cover;
     background: linear-gradient(135deg, #181c2f 0%, #232946 100%);
     border: 3px solid #9340ff;
-    /* Dodaj subtelny efekt "glass" */
     backdrop-filter: blur(2px) brightness(1.08);
-    /* Lekka animacja wejścia */
     animation: bullbear-fadein 1.2s cubic-bezier(0.23, 1, 0.32, 1);
 }
 

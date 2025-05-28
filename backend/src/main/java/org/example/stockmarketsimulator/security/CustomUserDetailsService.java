@@ -23,7 +23,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
 
-        // Tworzymy statycznych użytkowników
         var admin = org.springframework.security.core.userdetails.User.builder()
                 .username("admin")
                 .password(passwordEncoder.encode("admin"))
@@ -41,7 +40,6 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Najpierw sprawdzamy statycznych użytkowników
         if (username.equals("admin") || username.equals("user")) {
             return inMemoryManager.loadUserByUsername(username);
         }
@@ -52,7 +50,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getUsername())
                 .password(user.getPassword())
-                .authorities(user.getRole()) // Używamy roli z encji użytkownika
+                .authorities(user.getRole())
                 .build();
     }
 }

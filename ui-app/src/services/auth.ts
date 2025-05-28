@@ -17,14 +17,12 @@ export const refreshToken = async () => {
 };
 
 export const setupTokenRefresh = () => {
-    // Odświeżaj token co 15 minut
     setInterval(async () => {
         try {
             await refreshToken();
         } catch (error) {
             console.error('Failed to refresh token:', error);
-            // Opcjonalnie: przekieruj do strony logowania
             window.location.href = '/login';
         }
-    }, 15 * 60 * 1000); // 15 minut
+    }, 15 * 60 * 1000);
 };

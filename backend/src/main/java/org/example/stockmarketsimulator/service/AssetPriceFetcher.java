@@ -64,8 +64,8 @@ public class AssetPriceFetcher {
         Map<String, Double> prices = new HashMap<>();
 
         for (Asset asset : assets) {
-            String symbol = asset.getSymbol(); // np. BINANCE:BTCUSDT, AAPL
-            //coinmarketcup //coingeco
+            String symbol = asset.getSymbol();
+
             String url = "https://finnhub.io/api/v1/quote?symbol=" + symbol + "&token=" + API_TOKEN;
 
             try {
@@ -131,7 +131,6 @@ public class AssetPriceFetcher {
                 Double newPrice = prices.get(asset.getSymbol());
                 if (newPrice != null) {
                     asset.setPrice(newPrice);
-                    // Dodaj wpis do historii
                     AssetPriceHistory history = new AssetPriceHistory(asset, newPrice, LocalDateTime.now());
                     assetPriceHistoryRepository.save(history);
                 }
@@ -139,7 +138,6 @@ public class AssetPriceFetcher {
 
             assetsRepository.saveAll(assets);
             logger.info("Ceny aktywów zostały zaktualizowane");
-            // Wysyłanie wiadomości do RabbitMQ
             for (Asset asset : assets) {
                 if (prices.containsKey(asset.getSymbol())) {
                     String message = objectMapper.writeValueAsString(asset);
@@ -148,7 +146,6 @@ public class AssetPriceFetcher {
                 }
             }
 
-            // Przelicz profit dla wszystkich użytkowników po aktualizacji cen
             recalculateAllUsersProfit();
 
         } catch (Exception e) {

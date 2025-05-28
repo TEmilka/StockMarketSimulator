@@ -16,11 +16,10 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
-//Klasa odpowiedzialna za generowanie, walidację i dekodowanie tokenów JWT
 @Component
 public class JwtUtils {
 
-    private static final String SECRET_KEY = "TwojeSuperTajneHasloDoJWT_1234567890"; // powinno być min 256 bitów!
+    private static final String SECRET_KEY = "TwojeSuperTajneHasloDoJWT_1234567890";
 
     private static final long EXPIRATION_TIME = 86400000; // 1 dzień w ms
     private static final long REFRESH_EXPIRATION_TIME = 604800000; // 7 dni w ms
