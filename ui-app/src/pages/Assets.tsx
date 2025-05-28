@@ -1,19 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { Line } from "react-chartjs-2";
-import {
-    Chart as ChartJS,
-    LineElement,
-    PointElement,
-    LinearScale,
-    CategoryScale,
-    Tooltip,
-    Legend,
-} from "chart.js";
 import './Assets.css';
 import './AssetsCustom.css';
-
-ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
+import AssetList from "../components/AssetList";
+import AssetAddForm from "../components/AssetAddForm";
+import AssetFilters from "../components/AssetFilters";
+import AssetChartSection from "../components/AssetChartSection";
 
 interface AssetForm {
     symbol: string;
@@ -47,7 +39,6 @@ function Assets() {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
 
-    // Ref do całego kontenera
     const mainContainerRef = useRef<HTMLDivElement | null>(null);
     const chartSectionRef = useRef<HTMLDivElement | null>(null);
 
@@ -157,7 +148,6 @@ function Assets() {
         }
     };
 
-    // Pobierz historię cen po wyborze aktywa
     useEffect(() => {
         if (!selectedAsset) {
             setPriceHistory([]);
@@ -176,13 +166,10 @@ function Assets() {
         fetchHistory();
     }, [selectedAsset]);
 
-    // Scrolluj do wykresu po wyborze aktywa
     useEffect(() => {
         if (selectedAsset && chartSectionRef.current && mainContainerRef.current) {
             setTimeout(() => {
-                // Najpierw scrollujemy do góry kontenera
                 mainContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-                // Potem do wykresu (po chwili)
                 setTimeout(() => {
                     chartSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }, 200);
@@ -190,9 +177,7 @@ function Assets() {
         }
     }, [selectedAsset]);
 
-    // Funkcja do formatowania daty (np. "2024-05-25" lub "25.05.2024")
     const formatDate = (iso: string) => {
-        // Jeśli timestamp zawiera godzinę, bierz tylko datę
         const date = iso.split("T")[0];
         const [year, month, day] = date.split("-");
         return `${day}.${month}.${year}`;
@@ -208,176 +193,44 @@ function Assets() {
                 </p>
             </div>
 
-            {/* Pole wyszukiwania po nazwie lub symbolu oraz sortowanie */}
-            <div className="assets-filters">
-                <input
-                    type="text"
-                    placeholder="Szukaj po nazwie lub symbolu..."
-                    value={searchTerm}
-                    onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }}
-                    className="assets-filter-input"
-                />
-                <select
-                    value={sortBy}
-                    onChange={e => { setSortBy(e.target.value as "price" | "name" | "id"); setPage(0); }}
-                    className="assets-filter-select"
-                >
-                    <option value="id">Domyślne</option>
-                    <option value="price">Cena</option>
-                    <option value="name">Nazwa</option>
-                </select>
-                <button
-                    onClick={() => { setSortDirection(prev => prev === "asc" ? "desc" : "asc"); setPage(0); }}
-                    className="assets-filter-btn"
-                >
-                    {sortDirection === "asc" ? "↑" : "↓"}
-                </button>
-            </div>
-
-            {/* PAGINACJA */}
-            <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginBottom: "1.5rem" }}>
-                <button
-                    className="assets-btn"
-                    disabled={page === 0}
-                    onClick={() => setPage(p => Math.max(0, p - 1))}
-                >
-                    Poprzednia
-                </button>
-                <span style={{ color: "#fff", fontWeight: 600 }}>
-                    Strona {page + 1} z {totalPages}
-                </span>
-                <button
-                    className="assets-btn"
-                    disabled={page + 1 >= totalPages}
-                    onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                >
-                    Następna
-                </button>
-            </div>
+            <AssetFilters
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                sortDirection={sortDirection}
+                setSortDirection={setSortDirection}
+                page={page}
+                setPage={setPage}
+                totalPages={totalPages}
+            />
 
             {isAdmin && (
-                <form onSubmit={handleSubmit(addAssetToApi)} className="assets-form">
-                    <input
-                        {...register("symbol", { required: true })}
-                        placeholder="Symbol"
-                        className="assets-input"
-                    />
-                    <input
-                        {...register("name", { required: true })}
-                        placeholder="Nazwa"
-                        className="assets-input"
-                    />
-                    <input
-                        {...register("price", { required: true })}
-                        placeholder="Cena"
-                        type="number"
-                        className="assets-input"
-                    />
-                    <button
-                        type="submit"
-                        className="assets-btn"
-                        disabled={loading}
-                    >
-                        {loading ? "Dodawanie..." : "Dodaj asset"}
-                    </button>
-                </form>
+                <AssetAddForm
+                    loading={loading}
+                    onAdd={handleSubmit(addAssetToApi)}
+                    register={register}
+                />
             )}
 
             {error && <p className="assets-error">{error}</p>}
 
-            <div className="assets-list-section">
-                <h2 className="assets-list-title">Lista aktywów</h2>
-                <div className="assets-list-info">
-                    <span>Wybierz aktywo, aby zobaczyć szczegóły i wykres cenowy.</span>
-                </div>
-                <div className="assets-list">
-                    {loading ? (
-                        <p className="assets-error">Ładowanie aktywów...</p>
-                    ) : assets.length > 0 ? (
-                        assets.map((asset: Asset) => (
-                            <div
-                                key={asset.id}
-                                className={`assets-list-item${selectedAsset?.id === asset.id ? " selected" : ""}`}
-                                onClick={() => setSelectedAsset(asset)}
-                            >
-                                <div className="assets-list-main">
-                                    <span className="assets-list-symbol">{asset.symbol}</span>
-                                    <span className="assets-list-name">{asset.name}</span>
-                                </div>
-                                <div className="assets-list-details">
-                                    <span className="assets-list-price">{asset.price.toFixed(2)} USD</span>
-                                    {isAdmin && (
-                                        <button className="assets-delete-btn" onClick={e => { e.stopPropagation(); deleteAsset(asset.id); }}>
-                                            Usuń
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p className="assets-list-empty">Brak aktywów</p>
-                    )}
-                </div>
-            </div>
+            <AssetList
+                assets={assets}
+                loading={loading}
+                isAdmin={isAdmin}
+                selectedAsset={selectedAsset}
+                setSelectedAsset={setSelectedAsset}
+                deleteAsset={deleteAsset}
+            />
 
             {selectedAsset && (
-                <div className="assets-chart-section" ref={chartSectionRef}>
-                    <h2 className="assets-chart-title">
-                        Wykres ceny: {selectedAsset.name} ({selectedAsset.symbol})
-                    </h2>
-                    <div className="assets-chart-info">
-                        <span>
-                            Wykres przedstawia historię cen wybranego aktywa. Ostatni punkt to aktualna cena rynkowa.
-                        </span>
-                    </div>
-                    <div className="assets-chart-container">
-                        {priceHistory.length > 0 ? (
-                            <Line
-                                data={{
-                                    labels: priceHistory.map(p => formatDate(p.timestamp)),
-                                    datasets: [
-                                        {
-                                            label: "Cena",
-                                            data: priceHistory.map(p => p.price),
-                                            borderColor: "#ff3c5f", // zmiana z niebieskiego na różowy/czerwony
-                                            backgroundColor: "rgba(255,60,95,0.08)",
-                                            pointRadius: priceHistory.map((_, i) =>
-                                                i === priceHistory.length - 1 ? 7 : 3
-                                            ),
-                                            pointBackgroundColor: priceHistory.map((_, i) =>
-                                                i === priceHistory.length - 1 ? "#ef4444" : "#9340ff"
-                                            ),
-                                            tension: 0.3,
-                                        },
-                                    ],
-                                }}
-                                options={{
-                                    plugins: {
-                                        legend: { display: false },
-                                        tooltip: { enabled: true },
-                                    },
-                                    scales: {
-                                        x: {
-                                            display: true,
-                                            title: { display: true, text: "Data" },
-                                            ticks: {
-                                                callback: function(value) {
-                                                    // Skróć datę na osi X
-                                                    // @ts-ignore
-                                                    const label = this.getLabelForValue(value);
-                                                    return label;
-                                                }
-                                            }
-                                        },
-                                        y: { display: true, title: { display: true, text: "Cena (USD)" } },
-                                    },
-                                }}
-                            />
-                        ) : (
-                            <p className="assets-chart-empty">Brak danych do wyświetlenia wykresu.</p>
-                        )}
-                    </div>
-                </div>
+                <AssetChartSection
+                    ref={chartSectionRef}
+                    selectedAsset={selectedAsset}
+                    priceHistory={priceHistory}
+                    formatDate={formatDate}
+                />
             )}
         </div>
     );
