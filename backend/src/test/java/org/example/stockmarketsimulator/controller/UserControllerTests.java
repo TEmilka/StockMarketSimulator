@@ -22,6 +22,20 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.*;
 
+/**
+ * Pokrycie testami endpointów UserController:
+ * - GET /api/v1/users
+ * - POST /api/v1/users
+ * - DELETE /api/v1/users/{id}
+ * - GET /api/v1/users/{userId}/wallet/details
+ * - POST /api/v1/users/{userId}/wallet/add
+ * - GET /api/v1/users/{id}
+ * - POST /api/v1/users/{id}/add-funds
+ * - POST /api/v1/users/{userId}/wallet/trade
+ * - GET /api/v1/users/{userId}/transactions
+ * - GET /api/v1/users/{userId}/aggregated
+ */
+
 @ExtendWith(MockitoExtension.class)
 public class UserControllerTests {
 
@@ -191,5 +205,79 @@ public class UserControllerTests {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Użytkownik o ID 1 nie został znaleziony"))
                 .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
+    void getUserById_shouldReturnUser() throws Exception {
+        // Given
+        User user = new User("John Doe", "john.doe@example.com", "password123");
+        user.setId(1L);
+        when(userService.getUserById(1L)).thenReturn(user);
+
+        // When & Then
+        mockMvc.perform(get("/api/v1/users/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("John Doe"))
+                .andExpect(jsonPath("$.email").value("john.doe@example.com"));
+    }
+
+    @Test
+    void addFunds_shouldReturnUpdatedBalance() throws Exception {
+        // Given
+        Map<String, Object> response = Map.of("accountBalance", 1000.0, "profit", 0.0);
+        when(userService.addFunds(eq(1L), eq(1000.0))).thenReturn(response);
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/users/1/add-funds")
+                .contentType("application/json")
+                .content("{\"amount\":1000.0}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accountBalance").value(1000.0));
+    }
+
+    @Test
+    void tradeAsset_shouldReturnUpdatedWallet() throws Exception {
+        // Given
+        List<Map<String, Object>> wallet = Collections.singletonList(
+            Map.of("id", 1L, "symbol", "AAPL", "name", "Apple Inc.", "price", 150.0, "amount", 5.0)
+        );
+        when(userService.tradeAsset(eq(1L), eq("BUY"), eq(1L), eq(5.0))).thenReturn(wallet);
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/users/1/wallet/trade")
+                .contentType("application/json")
+                .content("{\"type\":\"BUY\",\"assetId\":1,\"amount\":5.0}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].symbol").value("AAPL"));
+    }
+
+    @Test
+    void getUserTransactions_shouldReturnTransactions() throws Exception {
+        // Given
+        List<Map<String, Object>> transactions = List.of(
+            Map.of("id", 1L, "type", "BUY", "assetSymbol", "AAPL", "amount", 2.0, "price", 100.0)
+        );
+        when(userService.getUserTransactions(1L)).thenReturn(transactions);
+
+        // When & Then
+        mockMvc.perform(get("/api/v1/users/1/transactions"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].type").value("BUY"));
+    }
+
+    @Test
+    void getAggregatedUserData_shouldReturnAggregatedData() throws Exception {
+        // Given
+        Map<String, Object> aggregated = Map.of(
+            "user", Map.of("id", 1L, "username", "John Doe"),
+            "transactions", List.of(),
+            "assets", List.of()
+        );
+        when(userService.getAggregatedUserData(1L)).thenReturn(aggregated);
+
+        // When & Then
+        mockMvc.perform(get("/api/v1/users/1/aggregated"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.user.username").value("John Doe"));
     }
 }

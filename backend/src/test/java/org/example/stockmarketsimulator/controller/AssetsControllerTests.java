@@ -20,6 +20,14 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.*;
 
+/**
+ * Pokrycie testami endpointów AssetsController:
+ * - GET /api/v1/assets
+ * - POST /api/v1/assets
+ * - DELETE /api/v1/assets/{id}
+ * - GET /api/v1/assets/{id}/history
+ */
+
 @ExtendWith(MockitoExtension.class)
 public class AssetsControllerTests {
 
@@ -102,5 +110,19 @@ public class AssetsControllerTests {
                 .andExpect(jsonPath("$.status").value(404));
 
         verify(assetService, times(1)).deleteAsset(assetId);
+    }
+
+    @Test
+    void getAssetHistory_shouldReturnHistory() throws Exception {
+        // Given
+        List<Map<String, Object>> history = List.of(
+            Map.of("timestamp", "2024-06-01T12:00:00", "price", 100.0)
+        );
+        when(assetService.getAssetHistory(1L)).thenReturn(history);
+
+        // When & Then
+        mockMvc.perform(get("/api/v1/assets/1/history"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].price").value(100.0));
     }
 }
