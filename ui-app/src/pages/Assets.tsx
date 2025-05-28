@@ -291,7 +291,9 @@ function Assets() {
                     <span>Wybierz aktywo, aby zobaczyć szczegóły i wykres cenowy.</span>
                 </div>
                 <div className="assets-list">
-                    {assets.length > 0 ? (
+                    {loading ? (
+                        <p className="assets-error">Ładowanie aktywów...</p>
+                    ) : assets.length > 0 ? (
                         assets.map((asset: Asset) => (
                             <div
                                 key={asset.id}

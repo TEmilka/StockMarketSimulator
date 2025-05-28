@@ -4,16 +4,18 @@ import './Notifications.css';
 function Notifications() {
     const [notifications, setNotifications] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string>("");
 
     const fetchNotifications = async () => {
         setLoading(true);
+        setError("");
         try {
             const response = await fetch("http://localhost:8000/api/notifications");
             if (!response.ok) throw new Error("Nie udało się pobrać powiadomień");
             const data = await response.json();
             setNotifications(data);
         } catch (error) {
-            console.error(error);
+            setError((error as Error).message);
         } finally {
             setLoading(false);
         }
@@ -47,6 +49,7 @@ function Notifications() {
                     </button>
                 </div>
             </div>
+            {error && <p className="notifications-error">{error}</p>}
             <ul>
                 {notifications.length > 0 ? (
                     notifications.map((notification, index) => (

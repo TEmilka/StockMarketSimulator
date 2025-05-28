@@ -123,13 +123,13 @@ function Users() {
     const fetchTransactions = async (userId: number) => {
         setLoadingTransactions(true);
         try {
-            const accessToken = localStorage.getItem("accessToken");
-            if (!accessToken) throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
-            
             const response = await fetch(`http://localhost:8000/api/v1/users/${userId}/transactions`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` }
+                credentials: 'include',
+                headers: { "Content-Type": "application/json" }
             });
-            
+
+            if (response.status === 401) throw new Error("Sesja wygasła. Zaloguj się ponownie.");
+            if (response.status === 403) throw new Error("Brak uprawnień do wyświetlania transakcji.");
             if (!response.ok) throw new Error("Nie udało się pobrać transakcji");
             const data = await response.json();
             setTransactions(data);
@@ -195,7 +195,9 @@ function Users() {
 
             <div className="admin-users-list-section">
                 <h2 className="admin-users-list-title">Lista użytkowników</h2>
-                {users.length > 0 ? (
+                {loading ? (
+                    <p className="admin-users-loading">Ładowanie użytkowników...</p>
+                ) : users.length > 0 ? (
                     <div className="admin-users-list">
                         {users.map((user: User) => (
                             <div key={user.id} className="admin-user-item">
