@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./UserWalletCustom.css";
+import UserSummary from "../components/UserSummary";
+import WalletAssetsList from "../components/WalletAssetsList";
+import TradeForm from "../components/TradeForm";
+import WalletTip from "../components/WalletTip";
 
 interface Asset {
     id: string;
@@ -24,12 +28,9 @@ function UserWallet() {
     const [assets, setAssets] = useState<Asset[]>([]);
     const [error, setError] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(true);
-
     const [availableAssets, setAvailableAssets] = useState<Asset[]>([]);
-
     const [account, setAccount] = useState<UserAccount>({ accountBalance: 0, profit: 0, username: "" });
     const [addFundsAmount, setAddFundsAmount] = useState<string>("");
-
     const [tradeAssetId, setTradeAssetId] = useState<string>("");
     const [tradeAmount, setTradeAmount] = useState<string>("");
     const [tradeType, setTradeType] = useState<"BUY" | "SELL">("BUY");
@@ -214,110 +215,30 @@ function UserWallet() {
             ref={walletLayoutRef}
         >
             <aside className="wallet-sidebar">
-                <div className="wallet-user">
-                    <div className="wallet-avatar">
-                        {account.username ? account.username[0].toUpperCase() : "U"}
-                    </div>
-                    <div className="wallet-username">{account.username || "Użytkownik"}</div>
-                </div>
-                <div className="wallet-balance">
-                    <span>Stan konta</span>
-                    <div className="wallet-balance-value">{account.accountBalance.toFixed(2)} PLN</div>
-                </div>
-                <div className="wallet-profit">
-                    <span>Profit</span>
-                    <div className={`wallet-profit-value ${account.profit >= 0 ? "profit-pos" : "profit-neg"}`}>
-                        {account.profit.toFixed(2)} PLN
-                    </div>
-                </div>
-                <form onSubmit={handleAddFunds} className="wallet-addfunds-form">
-                    <input
-                        type="number"
-                        placeholder="Kwota do dodania"
-                        value={addFundsAmount}
-                        onChange={e => setAddFundsAmount(e.target.value)}
-                        min="0.01"
-                        step="0.01"
-                        required
-                        className="wallet-addfunds-input"
-                    />
-                    <button type="submit" className="wallet-addfunds-btn">+</button>
-                </form>
+                <UserSummary
+                    account={account}
+                    addFundsAmount={addFundsAmount}
+                    setAddFundsAmount={setAddFundsAmount}
+                    handleAddFunds={handleAddFunds}
+                />
             </aside>
             <main className="wallet-main">
                 <h2 className="wallet-assets-title">Twoje aktywa</h2>
-                {assets.length > 0 ? (
-                    <div className="wallet-assets-list">
-                        {assets.map((asset) => (
-                            <div key={asset.id} className="wallet-asset-item">
-                                <div className="wallet-asset-main">
-                                    <span className="wallet-asset-symbol">{asset.symbol}</span>
-                                    <span className="wallet-asset-name">{asset.name}</span>
-                                </div>
-                                <div className="wallet-asset-details">
-                                    <span className="wallet-asset-amount">{asset.amount} szt.</span>
-                                    <span className="wallet-asset-price">@ {asset.price} USD</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="wallet-assets-empty">Brak aktywów w portfelu.</p>
-                )}
-
-                <div className="wallet-trade-section">
-                    <h3>Kup/Sprzedaj aktywo</h3>
-                    <form onSubmit={handleTrade} className="wallet-trade-form">
-                        <select
-                            value={tradeAssetId}
-                            onChange={e => setTradeAssetId(e.target.value)}
-                            required
-                            className="wallet-trade-select"
-                        >
-                            <option value="">Wybierz aktywo</option>
-                            {availableAssets.map((asset) => (
-                                <option key={asset.id} value={asset.id}>
-                                    {asset.name} ({asset.symbol}) - {asset.price} USD
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            type="number"
-                            placeholder="Ilość"
-                            value={tradeAmount}
-                            onChange={e => setTradeAmount(e.target.value)}
-                            min="0.01"
-                            step="0.01"
-                            required
-                            className="wallet-trade-input"
-                        />
-                        <select
-                            value={tradeType}
-                            onChange={e => setTradeType(e.target.value as "BUY" | "SELL")}
-                            className="wallet-trade-type"
-                        >
-                            <option value="BUY">Kup</option>
-                            <option value="SELL">Sprzedaj</option>
-                        </select>
-                        <button type="submit" className="wallet-trade-btn">Wykonaj</button>
-                    </form>
-                    {selectedTradeAsset && parsedTradeAmount > 0 && (
-                        <div className="wallet-trade-preview">
-                            {tradeType === "BUY" ? (
-                                <span>
-                                    Koszt zakupu: <strong>{tradeValue.toFixed(2)} USD</strong>
-                                </span>
-                            ) : (
-                                <span>
-                                    Otrzymasz za sprzedaż: <strong>{tradeValue.toFixed(2)} USD</strong>
-                                </span>
-                            )}
-                        </div>
-                    )}
-                </div>
-                <div className="wallet-tip">
-                    <span>💡 Tip: Regularnie sprawdzaj swój profit i reaguj na zmiany rynku!</span>
-                </div>
+                <WalletAssetsList assets={assets} />
+                <TradeForm
+                    availableAssets={availableAssets}
+                    tradeAssetId={tradeAssetId}
+                    setTradeAssetId={setTradeAssetId}
+                    tradeAmount={tradeAmount}
+                    setTradeAmount={setTradeAmount}
+                    tradeType={tradeType}
+                    setTradeType={setTradeType}
+                    handleTrade={handleTrade}
+                    selectedTradeAsset={selectedTradeAsset}
+                    parsedTradeAmount={parsedTradeAmount}
+                    tradeValue={tradeValue}
+                />
+                <WalletTip />
             </main>
         </div>
     );
