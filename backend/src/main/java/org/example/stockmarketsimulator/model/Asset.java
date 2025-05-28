@@ -3,7 +3,9 @@ package org.example.stockmarketsimulator.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "assets")
+@Table(name = "assets", indexes = {
+    @Index(name = "idx_asset_symbol", columnList = "symbol")
+})
 public class Asset {
 
     @Id

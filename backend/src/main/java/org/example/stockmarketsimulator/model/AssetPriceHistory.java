@@ -4,7 +4,10 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "asset_price_history")
+@Table(name = "asset_price_history", indexes = {
+    @Index(name = "idx_price_history_asset", columnList = "asset_id"),
+    @Index(name = "idx_price_history_timestamp", columnList = "timestamp")
+})
 public class AssetPriceHistory {
 
     @Id
