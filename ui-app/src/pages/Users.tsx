@@ -1,21 +1,11 @@
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
 import { useStore } from "../store";
 import { useNavigate } from "react-router-dom";
 import './Users.css';
 import './UsersAdminCustom.css';
-
-interface User {
-    id?: number;
-    name: string;
-    email: string;
-}
-
-interface UserForm {
-    username: string;  // changed from name to username
-    email: string;
-    password: string;
-}
+import UserAddForm from "../components/UserAddForm";
+import UserList from "../components/UserList";
+import UserTransactionsList from "../components/UserTransactionsList";
 
 interface Transaction {
     id: number;
@@ -28,6 +18,12 @@ interface Transaction {
     timestamp: string;
 }
 
+interface UserForm {
+    username: string;
+    email: string;
+    password: string;
+}
+
 function Users() {
     const { users, setUsers, userRole, addUser } = useStore();
     const [loading, setLoading] = useState(false);
@@ -36,7 +32,6 @@ function Users() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loadingTransactions, setLoadingTransactions] = useState(false);
     const navigate = useNavigate();
-    const { register, handleSubmit, reset } = useForm<UserForm>();
 
     const fetchUsers = async () => {
         try {
@@ -77,13 +72,19 @@ function Users() {
         setLoading(true);
         setError("");
         try {
+            // Backend oczekuje "username"
+            const payload = {
+                username: data.username,
+                email: data.email,
+                password: data.password
+            };
             const response = await fetch("http://localhost:8000/api/v1/users", {
                 method: "POST",
                 credentials: 'include',
                 headers: { 
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(data),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
@@ -92,7 +93,6 @@ function Users() {
 
             const newUser = await response.json();
             addUser(newUser);
-            reset();
         } catch (err) {
             setError((err as Error).message);
         } finally {
@@ -189,96 +189,23 @@ function Users() {
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit(addUserToApi)} className="admin-users-form">
-                <input
-                    {...register("username", { required: true })}
-                    placeholder="Nazwa użytkownika"
-                    className="admin-users-input"
-                />
-                <input
-                    {...register("email", { required: true })}
-                    placeholder="Email"
-                    type="email"
-                    className="admin-users-input"
-                />
-                <input
-                    {...register("password", { required: true })}
-                    placeholder="Hasło"
-                    type="password"
-                    className="admin-users-input"
-                />
-                <button
-                    type="submit"
-                    className="admin-users-btn"
-                    disabled={loading}
-                >
-                    {loading ? "Dodawanie..." : "Dodaj użytkownika"}
-                </button>
-            </form>
+            <UserAddForm loading={loading} onAdd={addUserToApi} />
 
             {error && <p className="admin-users-error">{error}</p>}
 
-            <div className="admin-users-list-section">
-                <h2 className="admin-users-list-title">Lista użytkowników</h2>
-                {loading ? (
-                    <p className="admin-users-loading">Ładowanie użytkowników...</p>
-                ) : users.length > 0 ? (
-                    <div className="admin-users-list">
-                        {users.map((user: User) => (
-                            <div key={user.id} className="admin-user-item">
-                                <div className="admin-user-avatar">
-                                    {user.name ? user.name[0].toUpperCase() : "U"}
-                                </div>
-                                <div className="admin-user-info">
-                                    <span className="admin-user-name">{user.name}</span>
-                                    <span className="admin-user-email">{user.email}</span>
-                                </div>
-                                <div className="admin-user-actions">
-                                    <button className="admin-user-wallet-btn" onClick={() => viewUserWallet(user.id!)}>Portfel</button>
-                                    <button className="admin-user-transactions-btn" onClick={() => fetchTransactions(user.id!)}>Transakcje</button>
-                                    <button className="admin-user-delete-btn" onClick={() => deleteUser(user.id!)}>Usuń</button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="admin-users-empty">Brak użytkowników</p>
-                )}
-            </div>
+            <UserList
+                users={users}
+                loading={loading}
+                onWalletClick={viewUserWallet}
+                onTransactionsClick={fetchTransactions}
+                onDeleteClick={deleteUser}
+            />
 
             {selectedUser && (
-                <div className="admin-users-transactions-section">
-                    <h2 className="admin-users-list-title">Historia transakcji użytkownika</h2>
-                    {loadingTransactions ? (
-                        <p className="admin-users-loading">Ładowanie transakcji...</p>
-                    ) : transactions.length > 0 ? (
-                        <div className="admin-users-transactions">
-                            {transactions.map((transaction) => (
-                                <div key={transaction.id} className="admin-user-transaction">
-                                    <div className="transaction-type" data-type={transaction.type}>
-                                        {transaction.type === 'BUY' ? 'Kupno' : 'Sprzedaż'}
-                                    </div>
-                                    <div className="transaction-details">
-                                        <span className="transaction-asset">
-                                            {transaction.assetName} ({transaction.assetSymbol})
-                                        </span>
-                                        <span className="transaction-amount">
-                                            {transaction.amount} szt. @ {transaction.price.toFixed(2)} USD
-                                        </span>
-                                        <span className="transaction-total">
-                                            Wartość: {transaction.totalValue.toFixed(2)} USD
-                                        </span>
-                                    </div>
-                                    <div className="transaction-timestamp">
-                                        {new Date(transaction.timestamp).toLocaleString()}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="admin-users-empty">Brak transakcji</p>
-                    )}
-                </div>
+                <UserTransactionsList
+                    transactions={transactions}
+                    loading={loadingTransactions}
+                />
             )}
         </div>
     );
