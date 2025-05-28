@@ -1,23 +1,16 @@
 package org.example.stockmarketsimulator.controller;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.example.stockmarketsimulator.dto.UserRegistrationDTO;
 import org.example.stockmarketsimulator.exception.BadRequestException;
 import org.example.stockmarketsimulator.model.User;
-import org.example.stockmarketsimulator.model.UserWallet;
-import org.example.stockmarketsimulator.repository.UserRepository;
 import org.example.stockmarketsimulator.security.JwtUtils;
+import org.example.stockmarketsimulator.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,17 +30,11 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthService authService;
 
-    @Autowired
-    private JwtUtils jwtUtils;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
 
     @Operation(
             summary = "Logowanie użytkownika",
@@ -60,30 +47,19 @@ public class AuthController {
     })
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody User request, HttpServletResponse response) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-            );
+        Map<String, String> authResult = authService.authenticate(request.getUsername(), request.getPassword());
+        
+        Cookie jwtCookie = new Cookie("jwt", authResult.get("token"));
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setSecure(true);
+        jwtCookie.setPath("/");
+        jwtCookie.setMaxAge(86400);
+        response.addCookie(jwtCookie);
 
-            User user = userRepository.findByUsername(request.getUsername())
-                    .orElseThrow(() -> new BadRequestException("User not found"));
-
-            String token = jwtUtils.generateToken(user.getUsername());
-            
-            Cookie jwtCookie = new Cookie("jwt", token);
-            jwtCookie.setHttpOnly(true);
-            jwtCookie.setSecure(true);
-            jwtCookie.setPath("/");
-            jwtCookie.setMaxAge(86400);
-            response.addCookie(jwtCookie);
-
-            return Map.of(
-                "userId", user.getId().toString(),
-                "role", user.getRole() 
-            );
-        } catch (AuthenticationException e) {
-            throw new BadRequestException("Invalid credentials");
-        }
+        return Map.of(
+            "userId", authResult.get("userId"),
+            "role", authResult.get("role")
+        );
     }
 
     @Operation(
@@ -97,31 +73,53 @@ public class AuthController {
     })
     @PostMapping(value = "/register", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> registerUser(@RequestBody @Valid UserRegistrationDTO userDTO) {
-        if (userRepository.existsByEmail(userDTO.getEmail())) {
+        try {
+            authService.register(userDTO);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("Użytkownik został pomyślnie zarejestrowany.");
+        } catch (BadRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body("Użytkownik o tym emailu już istnieje.");
+                    .body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = null;
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("refresh_token".equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                    break;
+                }
+            }
         }
 
-        if (userRepository.existsByUsername(userDTO.getUsername())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body("Użytkownik o tej nazwie użytkownika już istnieje.");
+        if (refreshToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "No refresh token provided"));
         }
 
-        String encryptedPassword = passwordEncoder.encode(userDTO.getPassword());
+        try {
+            Map<String, String> refreshResult = authService.refreshToken(refreshToken);
+            
+            Cookie jwtCookie = new Cookie("jwt", refreshResult.get("token"));
+            jwtCookie.setHttpOnly(true);
+            jwtCookie.setSecure(true);
+            jwtCookie.setPath("/");
+            jwtCookie.setMaxAge(86400);
+            response.addCookie(jwtCookie);
 
-        User newUser = new User();
-        newUser.setUsername(userDTO.getUsername());
-        newUser.setEmail(userDTO.getEmail());
-        newUser.setPassword(encryptedPassword);
-        newUser.setWallet(new UserWallet(newUser));
-
-        userRepository.save(newUser);
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body("Użytkownik został pomyślnie zarejestrowany.");
+            return ResponseEntity.ok(Map.of(
+                "userId", refreshResult.get("userId"),
+                "role", refreshResult.get("role")
+            ));
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/logout")
@@ -134,44 +132,5 @@ public class AuthController {
         response.addCookie(jwtCookie);
 
         return ResponseEntity.ok().body(Map.of("message", "Logged out successfully"));
-    }
-
-    @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
-        // Pobierz refresh token z ciasteczka
-        String refreshToken = null;
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if ("refresh_token".equals(cookie.getName())) {
-                    refreshToken = cookie.getValue();
-                    break;
-                }
-            }
-        }
-
-        if (refreshToken != null && jwtUtils.validateRefreshToken(refreshToken)) {
-            String username = jwtUtils.extractUsername(refreshToken);
-            User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new BadRequestException("User not found"));
-
-            // Generuj nowy access token
-            String newToken = jwtUtils.generateToken(username);
-            
-            // Ustaw nowy access token w ciasteczku
-            Cookie jwtCookie = new Cookie("jwt", newToken);
-            jwtCookie.setHttpOnly(true);
-            jwtCookie.setSecure(true);
-            jwtCookie.setPath("/");
-            jwtCookie.setMaxAge(86400);
-            response.addCookie(jwtCookie);
-
-            return ResponseEntity.ok(Map.of(
-                "userId", user.getId().toString(),
-                "role", user.getRole()
-            ));
-        }
-
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Invalid refresh token"));
     }
 }
