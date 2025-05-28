@@ -408,6 +408,59 @@ public class UserController {
         }
     }
 
+    @Operation(
+            summary = "Pobierz zagregowane dane użytkownika",
+            description = "Zwraca zagregowane dane użytkownika, w tym szczegóły konta, transakcje i aktywa. Wymaga roli ADMIN."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Pobrano zagregowane dane użytkownika"),
+            @ApiResponse(responseCode = "404", description = "Użytkownik nie znaleziony", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Brak uprawnień", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Błąd serwera", content = @Content)
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{userId}/aggregated")
+    public ResponseEntity<?> getAggregatedUserData(@PathVariable Long userId) {
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("user", Map.of(
+                "id", user.getId(),
+                "username", user.getUsername(),
+                "email", user.getEmail(),
+                "accountBalance", user.getAccountBalance(),
+                "profit", user.getProfit()
+            ));
+            
+            List<Transactions> transactions = transactionsRepository.findByUserOrderByTimestampDesc(user);
+            response.put("transactions", transactions);
+            
+            UserWallet wallet = user.getWallet();
+            if (wallet != null) {
+                List<Map<String, Object>> assets = new ArrayList<>();
+                for (Map.Entry<Long, Double> entry : wallet.getAssets().entrySet()) {
+                    Asset asset = assetsRepository.findById(entry.getKey()).orElse(null);
+                    if (asset != null) {
+                        assets.add(Map.of(
+                            "id", asset.getId(),
+                            "symbol", asset.getSymbol(),
+                            "name", asset.getName(),
+                            "amount", entry.getValue(),
+                            "price", asset.getPrice()
+                        ));
+                    }
+                }
+                response.put("assets", assets);
+            }
+            
+            return ResponseEntity.ok(response);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
+
     // --- GLOBAL EXCEPTION HANDLERS ---
     @ExceptionHandler(org.example.stockmarketsimulator.exception.ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)

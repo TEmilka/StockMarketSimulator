@@ -116,24 +116,49 @@ function Users() {
         }
     };
 
-    const viewUserWallet = (userId: number) => {
-        navigate(`/user-wallet/${userId}`);
+    const viewUserWallet = async (userId: number) => {
+        try {
+            // Prefetch wallet data before navigation
+            const response = await fetch(`http://localhost:8000/api/v1/users/${userId}/wallet/details`, {
+                credentials: 'include'
+            });
+            if (response.ok) {
+                // Store in global state or localStorage for instant access after navigation
+                localStorage.setItem(`wallet_${userId}`, JSON.stringify(await response.json()));
+            }
+            navigate(`/user-wallet/${userId}`);
+        } catch (err) {
+            console.error("Failed to prefetch wallet data:", err);
+            navigate(`/user-wallet/${userId}`);
+        }
     };
 
     const fetchTransactions = async (userId: number) => {
         setLoadingTransactions(true);
         try {
-            const response = await fetch(`http://localhost:8000/api/v1/users/${userId}/transactions`, {
-                credentials: 'include',
-                headers: { "Content-Type": "application/json" }
-            });
+            const [userResponse, transactionsResponse] = await Promise.all([
+                fetch(`http://localhost:8000/api/v1/users/${userId}`, {
+                    credentials: 'include'
+                }),
+                fetch(`http://localhost:8000/api/v1/users/${userId}/transactions`, {
+                    credentials: 'include'
+                })
+            ]);
 
-            if (response.status === 401) throw new Error("Sesja wygasła. Zaloguj się ponownie.");
-            if (response.status === 403) throw new Error("Brak uprawnień do wyświetlania transakcji.");
-            if (!response.ok) throw new Error("Nie udało się pobrać transakcji");
-            const data = await response.json();
-            setTransactions(data);
+            if (!userResponse.ok || !transactionsResponse.ok) {
+                throw new Error("Nie udało się pobrać danych użytkownika");
+            }
+
+            const [userData, transactionsData] = await Promise.all([
+                userResponse.json(),
+                transactionsResponse.json()
+            ]);
+
+            setTransactions(transactionsData);
             setSelectedUser(userId);
+            
+            // Cache user data
+            localStorage.setItem(`user_${userId}`, JSON.stringify(userData));
         } catch (err) {
             setError((err as Error).message);
         } finally {
